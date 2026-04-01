@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>LLM-Driven Meta-Analysis: Automated Extraction and Synthesis from Clinical Trials — Dashboard</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Georgia,'Times New Roman',serif;background:#FDFCFA;color:#1a1a1a;line-height:1.7;-webkit-font-smoothing:antialiased}
+.page{max-width:680px;margin:0 auto;padding:2.5rem 1.5rem 3rem}
+h1{font-size:1.6rem;font-weight:700;line-height:1.3;margin-bottom:.5rem}
+.byline{font-family:system-ui,sans-serif;font-size:.82rem;color:#777;margin-bottom:2rem;padding-bottom:1rem;border-bottom:3px double #E5E0D6}
+.section-label{font-family:system-ui,sans-serif;font-size:.65rem;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:#8B6914;margin-bottom:.8rem;padding-bottom:.4rem;border-bottom:1px solid #E5E0D6}
+.metrics{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:2rem}
+.chart-area{margin-bottom:2rem;text-align:center}
+.body-text{font-size:1.05rem;line-height:1.9;text-align:justify;margin-bottom:2rem;padding:1.2rem 1.5rem;background:#F5F3EE;border-radius:8px;border-left:3px solid #8B6914}
+.notes{font-family:system-ui,sans-serif;font-size:.82rem;color:#555;display:grid;grid-template-columns:auto 1fr;gap:.3rem .8rem;margin-bottom:1.5rem}
+.notes dt{font-weight:600;color:#333}.notes dd a{color:#2E6B8A;text-decoration:none}
+.footer{font-family:system-ui,sans-serif;font-size:.7rem;color:#aaa;padding-top:1rem;border-top:1px solid #E5E0D6;text-align:center}
+@media(max-width:600px){.metrics{flex-direction:column}.page{padding:1.5rem 1rem}h1{font-size:1.3rem}}
+@media print{body{background:#fff}.page{max-width:100%}}
+</style>
+</head>
+<body>
+<div class="page">
+  <div style="font-family:system-ui,sans-serif;font-size:.6rem;font-weight:700;letter-spacing:.25em;text-transform:uppercase;color:#8B6914;margin-bottom:1rem">E156 Project Dashboard</div>
+  <h1>LLM-Driven Meta-Analysis: Automated Extraction and Synthesis from Clinical Trials</h1>
+  <div class="byline">Mahmood Ahmad &middot; 2026-03-26 &middot; Methods</div>
+
+  <div class="section-label">Key Metrics</div>
+  <div class="metrics"><div style="flex:1;min-width:140px;background:#fff;border:1px solid #E5E0D6;border-top:3px solid #8B6914;border-radius:6px;padding:16px;text-align:center">
+      <div style="font-family:system-ui,sans-serif;font-size:10px;letter-spacing:0.15em;text-transform:uppercase;color:#888;margin-bottom:8px">Tests</div>
+      <div style="font-family:Georgia,serif;font-size:28px;font-weight:700;color:#1a1a1a;line-height:1.1">7</div>
+      <div style="font-family:system-ui,sans-serif;font-size:11px;color:#aaa;margin-top:4px">Validation checks passed</div>
+    </div><div style="flex:1;min-width:140px;background:#fff;border:1px solid #E5E0D6;border-top:3px solid #8B6914;border-radius:6px;padding:16px;text-align:center">
+      <div style="font-family:system-ui,sans-serif;font-size:10px;letter-spacing:0.15em;text-transform:uppercase;color:#888;margin-bottom:8px">Type</div>
+      <div style="font-family:Georgia,serif;font-size:28px;font-weight:700;color:#1a1a1a;line-height:1.1">Methods</div>
+      <div style="font-family:system-ui,sans-serif;font-size:11px;color:#aaa;margin-top:4px">Study design</div>
+    </div><div style="flex:1;min-width:140px;background:#fff;border:1px solid #E5E0D6;border-top:3px solid #8B6914;border-radius:6px;padding:16px;text-align:center">
+      <div style="font-family:system-ui,sans-serif;font-size:10px;letter-spacing:0.15em;text-transform:uppercase;color:#888;margin-bottom:8px">Words</div>
+      <div style="font-family:Georgia,serif;font-size:28px;font-weight:700;color:#1a1a1a;line-height:1.1">157</div>
+      <div style="font-family:system-ui,sans-serif;font-size:11px;color:#aaa;margin-top:4px">E156 body length</div>
+    </div></div>
+
+  <div class="section-label">Method Pipeline</div>
+  <div class="chart-area"><svg viewBox="0 0 560 90" style="width:100%;max-width:560px;height:auto">
+  <rect x="0" y="0" width="560" height="90" fill="#FDFCFA" rx="8"/>
+  <text x="280" y="20" text-anchor="middle" font-family="system-ui,sans-serif" font-size="11" fill="#888" letter-spacing="0.1em">METHOD PIPELINE</text>
+  <rect x="20" y="35" width="120" height="40" fill="#8B6914" opacity="0.1" rx="6" stroke="#8B6914" stroke-width="1.5"/>
+  <text x="80" y="59" text-anchor="middle" font-family="system-ui,sans-serif" font-size="11" font-weight="600" fill="#6d5210">Data Extraction</text>
+  <text x="148" y="58" font-family="system-ui,sans-serif" font-size="16" fill="#ccc">→</text><rect x="155" y="35" width="120" height="40" fill="#8B6914" opacity="0.1" rx="6" stroke="#8B6914" stroke-width="1.5"/>
+  <text x="215" y="59" text-anchor="middle" font-family="system-ui,sans-serif" font-size="11" font-weight="600" fill="#6d5210">Effect Size Computation</text>
+  <text x="283" y="58" font-family="system-ui,sans-serif" font-size="16" fill="#ccc">→</text><rect x="290" y="35" width="120" height="40" fill="#8B6914" opacity="0.1" rx="6" stroke="#8B6914" stroke-width="1.5"/>
+  <text x="350" y="59" text-anchor="middle" font-family="system-ui,sans-serif" font-size="11" font-weight="600" fill="#6d5210">Random-Effects Pooling</text>
+  <text x="418" y="58" font-family="system-ui,sans-serif" font-size="16" fill="#ccc">→</text><rect x="425" y="35" width="120" height="40" fill="#8B6914" opacity="0.1" rx="6" stroke="#8B6914" stroke-width="1.5"/>
+  <text x="485" y="59" text-anchor="middle" font-family="system-ui,sans-serif" font-size="11" font-weight="600" fill="#6d5210">Sensitivity Analysis</text>
+</svg></div>
+
+  
+
+  <div class="section-label">Sentence Structure</div>
+  <div class="chart-area"><svg viewBox="0 0 560 300" style="width:100%;max-width:560px;height:auto">
+  <rect x="0" y="0" width="560" height="300" fill="#FDFCFA" rx="8"/>
+  <text x="280" y="18" text-anchor="middle" font-family="system-ui,sans-serif" font-size="11" fill="#888" letter-spacing="0.1em">7-SENTENCE STRUCTURE</text>
+  <rect x="130" y="30" width="144" height="26" fill="#2E86C1" opacity="0.15" rx="4"/>
+  <rect x="130" y="30" width="4" height="26" fill="#2E86C1" rx="2"/>
+  <text x="20" y="47" font-family="system-ui,sans-serif" font-size="10" font-weight="700" fill="#2E86C1" letter-spacing="0.05em">QUESTION</text>
+  <text x="142" y="47" font-family="Georgia,serif" font-size="11" fill="#333">Can large language models automate extraction and synth...</text>
+<rect x="130" y="68" width="248" height="26" fill="#28B463" opacity="0.15" rx="4"/>
+  <rect x="130" y="68" width="4" height="26" fill="#28B463" rx="2"/>
+  <text x="20" y="85" font-family="system-ui,sans-serif" font-size="10" font-weight="700" fill="#28B463" letter-spacing="0.05em">DATASET</text>
+  <text x="142" y="85" font-family="Georgia,serif" font-size="11" fill="#333">We developed a Python framework coupling LLM-based data...</text>
+<rect x="130" y="106" width="208" height="26" fill="#7D3C98" opacity="0.15" rx="4"/>
+  <rect x="130" y="106" width="4" height="26" fill="#7D3C98" rx="2"/>
+  <text x="20" y="123" font-family="system-ui,sans-serif" font-size="10" font-weight="700" fill="#7D3C98" letter-spacing="0.05em">METHOD</text>
+  <text x="142" y="123" font-family="Georgia,serif" font-size="11" fill="#333">The pipeline includes six modules covering random-effec...</text>
+<rect x="130" y="144" width="216" height="26" fill="#CB4335" opacity="0.15" rx="4"/>
+  <rect x="130" y="144" width="4" height="26" fill="#CB4335" rx="2"/>
+  <text x="20" y="161" font-family="system-ui,sans-serif" font-size="10" font-weight="700" fill="#CB4335" letter-spacing="0.05em">PRIMARY RESULT</text>
+  <text x="142" y="161" font-family="Georgia,serif" font-size="11" fill="#333">Validation on the BCG dataset confirmed 7 of 7 tests pa...</text>
+<rect x="130" y="182" width="152" height="26" fill="#D68910" opacity="0.15" rx="4"/>
+  <rect x="130" y="182" width="4" height="26" fill="#D68910" rx="2"/>
+  <text x="20" y="199" font-family="system-ui,sans-serif" font-size="10" font-weight="700" fill="#D68910" letter-spacing="0.05em">ROBUSTNESS</text>
+  <text x="142" y="199" font-family="Georgia,serif" font-size="11" fill="#333">Bootstrap variance propagation showed that extraction u...</text>
+<rect x="130" y="220" width="144" height="26" fill="#148F77" opacity="0.15" rx="4"/>
+  <rect x="130" y="220" width="4" height="26" fill="#148F77" rx="2"/>
+  <text x="20" y="237" font-family="system-ui,sans-serif" font-size="10" font-weight="700" fill="#148F77" letter-spacing="0.05em">INTERPRETATION</text>
+  <text x="142" y="237" font-family="Georgia,serif" font-size="11" fill="#333">The unified interface auto-selects HKSJ for small sampl...</text>
+<rect x="130" y="258" width="144" height="26" fill="#85929E" opacity="0.15" rx="4"/>
+  <rect x="130" y="258" width="4" height="26" fill="#85929E" rx="2"/>
+  <text x="20" y="275" font-family="system-ui,sans-serif" font-size="10" font-weight="700" fill="#85929E" letter-spacing="0.05em">BOUNDARY</text>
+  <text x="142" y="275" font-family="Georgia,serif" font-size="11" fill="#333">A limitation is that extraction accuracy depends on LLM...</text>
+
+</svg></div>
+
+  <div class="section-label">Paper Body (156 Words)</div>
+  <div class="body-text">Can large language models automate extraction and synthesis of numerical results from randomized controlled trials with statistical rigor? We developed a Python framework coupling LLM-based data extraction with a meta-analytic engine implementing HKSJ-adjusted confidence intervals, Q-profile heterogeneity bounds, REML estimation with DerSimonian-Laird fallback, and network meta-analysis with inconsistency diagnostics. The pipeline includes six modules covering random-effects pooling, meta-regression with Knapp-Hartung adjustment, cumulative analysis with alpha-spending boundaries, and generalized linear mixed models for binary outcome data. Validation on the BCG dataset confirmed 7 of 7 tests passed, with the pooled RR and 95% CI matching published R metafor benchmarks within three decimal places. Bootstrap variance propagation showed that extraction uncertainty contributes less than eight percent of total variance in pooled effect sizes. The unified interface auto-selects HKSJ for small samples and Wald intervals for larger analyses following current Cochrane guidance. A limitation is that extraction accuracy depends on LLM prompt design and may degrade with non-standard reporting formats.</div>
+
+  <div class="section-label">Outside Notes</div>
+  <dl class="notes">
+    <dt>App</dt><dd>LLM Meta-Analysis Framework v2.0</dd>
+    <dt>Data</dt><dd>BCG vaccine dataset, 7 validation tests</dd>
+    <dt>Code</dt><dd><a href='https://github.com/hyesunyun/llm-meta-analysis' target='_blank'>https://github.com/hyesunyun/llm-meta-analysis</a></dd>
+    <dt>Estimand</dt><dd>Pooled effect size</dd>
+  </dl>
+
+  <div class="footer">E156 Micro-Paper Dashboard &middot; Generated 2026-03-26</div>
+</div>
+</body>
+</html>

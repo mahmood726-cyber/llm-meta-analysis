@@ -1,0 +1,1869 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LLM Meta-Analysis Framework</title>
+
+    <!-- External Libraries (CDN) -->
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
+    <style>
+        :root {
+            --primary-color: #1976d2;
+            --secondary-color: #dc004e;
+            --success-color: #4caf50;
+            --warning-color: #ff9800;
+            --danger-color: #f44336;
+            --light-bg: #f5f5f5;
+            --sidebar-width: 250px;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background-color: var(--light-bg);
+        }
+
+        .app-container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: var(--sidebar-width);
+            background: linear-gradient(180deg, #1a237e 0%, #283593 100%);
+            color: white;
+            position: fixed;
+            height: 100vh;
+            overflow-y: auto;
+            transition: transform 0.3s ease;
+            z-index: 1000;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .sidebar-header h4 {
+            margin: 0;
+            font-weight: bold;
+            font-size: 1.2rem;
+        }
+
+        .sidebar-nav {
+            padding: 10px 0;
+        }
+
+        .nav-item {
+            padding: 12px 20px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            transition: background 0.2s;
+            color: rgba(255,255,255,0.8);
+            text-decoration: none;
+        }
+
+        .nav-item:hover {
+            background: rgba(255,255,255,0.1);
+            color: white;
+        }
+
+        .nav-item.active {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .nav-item i {
+            font-size: 1.2rem;
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            margin-left: var(--sidebar-width);
+            padding: 20px;
+        }
+
+        .top-bar {
+            background: white;
+            padding: 15px 20px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .top-bar h5 {
+            margin: 0;
+        }
+
+        /* Cards */
+        .card {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+
+        .card-header {
+            padding: 15px 20px;
+            border-bottom: 1px solid #eee;
+            font-weight: 600;
+        }
+
+        .card-body {
+            padding: 20px;
+        }
+
+        /* Stats Cards */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .stat-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            color: white;
+        }
+
+        .stat-icon.primary { background: var(--primary-color); }
+        .stat-icon.secondary { background: var(--secondary-color); }
+        .stat-icon.success { background: var(--success-color); }
+        .stat-icon.warning { background: var(--warning-color); }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .stat-label {
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        /* Forms */
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+            color: #333;
+        }
+
+        .form-control, .form-select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        .form-control:focus, .form-select:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(25, 118, 210, 0.1);
+        }
+
+        /* Buttons */
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #1565c0;
+        }
+
+        .btn-outline {
+            background: white;
+            border: 1px solid var(--primary-color);
+            color: var(--primary-color);
+        }
+
+        .btn-outline:hover {
+            background: #f5f5f5;
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        /* Tabs */
+        .tabs {
+            display: flex;
+            border-bottom: 1px solid #ddd;
+            margin-bottom: 20px;
+        }
+
+        .tab {
+            padding: 12px 20px;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            color: #666;
+        }
+
+        .tab:hover {
+            color: var(--primary-color);
+        }
+
+        .tab.active {
+            border-bottom-color: var(--primary-color);
+            color: var(--primary-color);
+            font-weight: 500;
+        }
+
+        /* Upload Zone */
+        .upload-zone {
+            border: 2px dashed #ddd;
+            border-radius: 8px;
+            padding: 40px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .upload-zone:hover, .upload-zone.dragover {
+            border-color: var(--primary-color);
+            background: rgba(25, 118, 210, 0.05);
+        }
+
+        .upload-zone i {
+            font-size: 3rem;
+            color: #999;
+            margin-bottom: 15px;
+        }
+
+        /* Plot Container */
+        .plot-container {
+            width: 100%;
+            height: 500px;
+        }
+
+        /* Loading Spinner */
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid var(--primary-color);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Loading Screen */
+        .loading-screen {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            background: var(--light-bg);
+        }
+
+        .loading-screen h3 {
+            color: #666;
+            margin-top: 20px;
+        }
+
+        /* Alert */
+        .alert {
+            padding: 15px 20px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+        }
+
+        .alert-info {
+            background: #e3f2fd;
+            color: #1976d2;
+            border-left: 4px solid #1976d2;
+        }
+
+        .alert-error {
+            background: #ffebee;
+            color: #c62828;
+            border-left: 4px solid #c62828;
+        }
+
+        .alert-success {
+            background: #e8f5e9;
+            color: #2e7d32;
+            border-left: 4px solid #2e7d32;
+        }
+
+        /* Table */
+        .table-container {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        th {
+            background: #f5f5f5;
+            font-weight: 600;
+        }
+
+        /* ROB Badge */
+        .rob-badge {
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: bold;
+            color: white;
+            display: inline-block;
+        }
+
+        .rob-low { background: #4caf50; }
+        .rob-some { background: #ff9800; }
+        .rob-high { background: #f44336; }
+
+        /* PRISMA Diagram */
+        .prisma-diagram {
+            border: 2px solid var(--primary-color);
+            border-radius: 8px;
+            padding: 20px;
+            background: white;
+        }
+
+        .prisma-box {
+            border: 1px solid #ddd;
+            padding: 10px;
+            margin: 10px 0;
+            text-align: center;
+            background: #fafafa;
+            border-radius: 4px;
+        }
+
+        .prisma-arrow {
+            text-align: center;
+            font-size: 1.5rem;
+            color: #666;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .sidebar.open {
+                transform: translateX(0);
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            .mobile-menu-btn {
+                display: block;
+            }
+        }
+
+        @media (min-width: 769px) {
+            .mobile-menu-btn {
+                display: none;
+            }
+        }
+
+        /* Toggle Buttons */
+        .toggle-group {
+            display: flex;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            overflow: hidden;
+        }
+
+        .toggle-btn {
+            padding: 8px 16px;
+            background: white;
+            border: none;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .toggle-btn:hover {
+            background: #f5f5f5;
+        }
+
+        .toggle-btn.active {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        /* File List */
+        .file-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .file-item:last-child {
+            border-bottom: none;
+        }
+
+        .file-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .file-icon {
+            color: #666;
+        }
+
+        /* Two Column Layout */
+        .two-column {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 20px;
+        }
+
+        @media (max-width: 992px) {
+            .two-column {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Results Table */
+        .results-table {
+            font-size: 0.9rem;
+        }
+
+        .results-table td {
+            padding: 8px;
+        }
+
+        /* Plot Tabs */
+        .plot-tabs {
+            display: flex;
+            gap: 5px;
+            margin-bottom: 15px;
+        }
+
+        .plot-tab-btn {
+            padding: 6px 12px;
+            background: #eee;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        .plot-tab-btn.active {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+
+        /* Connection Status */
+        .connection-status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.85rem;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+        }
+
+        .status-dot.connected {
+            background: #4caf50;
+        }
+
+        .status-dot.error {
+            background: #f44336;
+        }
+
+        /* Feature List */
+        .feature-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .feature-list li {
+            padding: 8px 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .feature-list li:last-child {
+            border-bottom: none;
+        }
+
+        .feature-list li::before {
+            content: "✓";
+            color: var(--success-color);
+            font-weight: bold;
+            margin-right: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        // ============================================
+        // API SERVICE
+        // ============================================
+        const API = {
+            baseUrl: window.location.hostname === 'localhost' ? 'http://localhost:8000' : window.location.origin,
+
+            async request(endpoint, options = {}) {
+                const url = `${this.baseUrl}${endpoint}`;
+                const token = localStorage.getItem('auth_token');
+
+                const headers = {
+                    'Content-Type': 'application/json',
+                    ...(token && { Authorization: `Bearer ${token}` }),
+                    ...options.headers
+                };
+
+                try {
+                    const response = await fetch(url, { ...options, headers });
+                    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                    return await response.json();
+                } catch (error) {
+                    console.error('API Error:', error);
+                    throw error;
+                }
+            },
+
+            getHealth: () => API.request('/health'),
+            getStudies: (params) => API.request('/api/studies?' + new URLSearchParams(params)),
+            runExtraction: (studyId, config) => API.request(`/api/studies/${studyId}/extract`, {
+                method: 'POST',
+                body: JSON.stringify(config)
+            }),
+            runAnalysis: (config) => API.request('/api/meta-analysis/run', {
+                method: 'POST',
+                body: JSON.stringify(config)
+            }),
+            exportResults: (format) => API.request(`/api/export/${format}`)
+        };
+
+        // ============================================
+        // FOREST PLOT COMPONENT
+        // ============================================
+        function ForestPlot({ data, pooledEffect, outcomeName, effectMeasure = 'OR' }) {
+            const plotRef = React.useRef(null);
+
+            const effectLabels = {
+                OR: 'Odds Ratio (log scale)',
+                RR: 'Risk Ratio (log scale)',
+                MD: 'Mean Difference',
+                SMD: 'Std. Mean Difference',
+                HR: 'Hazard Ratio (log scale)'
+            };
+
+            React.useEffect(() => {
+                if (!plotRef.current) return;
+
+                const isLogScale = effectMeasure === 'OR' || effectMeasure === 'RR' || effectMeasure === 'HR';
+                const yPositions = data.map((_, i) => i);
+
+                // Create CI lines
+                const ciTraces = data.map((study, i) => ({
+                    x: [study.ci_lower, study.ci_upper],
+                    y: [i, i],
+                    mode: 'lines',
+                    line: { color: '#1f77b4', width: 3 },
+                    hoverinfo: 'skip',
+                    name: study.study_id
+                }));
+
+                // Create point markers
+                const pointTraces = data.map((study, i) => ({
+                    x: [study.effect],
+                    y: [i],
+                    mode: 'markers',
+                    marker: { size: 8, color: '#1f77b4' },
+                    hovertemplate: `<b>${study.name}</b><br>` +
+                                  `Effect: ${study.effect.toFixed(3)}<br>` +
+                                  `CI: ${study.ci_lower.toFixed(3)} - ${study.ci_upper.toFixed(3)}<extra></extra>`,
+                    name: study.study_id
+                }));
+
+                // Pooled effect
+                let pooledTraces = [];
+                if (pooledEffect) {
+                    const pooledY = data.length;
+                    pooledTraces = [
+                        {
+                            x: [pooledEffect.ci_lower, pooledEffect.ci_upper],
+                            y: [pooledY, pooledY],
+                            mode: 'lines',
+                            line: { color: '#d62728', width: 4 },
+                            hoverinfo: 'skip',
+                            name: 'Pooled CI'
+                        },
+                        {
+                            x: [pooledEffect.effect],
+                            y: [pooledY],
+                            mode: 'markers',
+                            marker: { size: 12, color: '#d62728', symbol: 'diamond' },
+                            name: 'Pooled',
+                            hovertemplate: `<b>Pooled Effect</b><br>` +
+                                          `Effect: ${pooledEffect.effect.toFixed(3)}<br>` +
+                                          `CI: ${pooledEffect.ci_lower.toFixed(3)} - ${pooledEffect.ci_upper.toFixed(3)}<br>` +
+                                          `I²: ${pooledEffect.i_squared?.toFixed(1) || 'N/A'}%<extra></extra>`
+                        }
+                    ];
+                }
+
+                // Reference line
+                const refLineX = isLogScale ? [0.1, 10] : [-5, 5];
+                const refLineY = [0, data.length + (pooledEffect ? 1 : 0)];
+                const refTrace = {
+                    x: isLogScale ? [1, 1] : [0, 0],
+                    y: refLineY,
+                    mode: 'lines',
+                    line: { color: 'black', width: 1, dash: 'dash' },
+                    name: 'No effect',
+                    hoverinfo: 'skip'
+                };
+
+                const allTraces = [...ciTraces, ...pointTraces, ...pooledTraces, refTrace];
+
+                const layout = {
+                    title: `Forest Plot: ${outcomeName}`,
+                    xaxis: {
+                        title: effectLabels[effectMeasure],
+                        type: isLogScale ? 'log' : 'linear'
+                    },
+                    yaxis: {
+                        title: 'Study',
+                        tickvals: yPositions,
+                        ticktext: data.map(s => s.name)
+                    },
+                    hovermode: 'closest',
+                    margin: { l: 200, r: 50, t: 50, b: 50 },
+                    showlegend: false,
+                    height: 100 + data.length * 30
+                };
+
+                Plotly.newPlot(plotRef.current, allTraces, layout, { responsive: true });
+
+                return () => Plotly.purge(plotRef.current);
+            }, [data, pooledEffect, outcomeName, effectMeasure]);
+
+            return (
+                <div className="card">
+                    <div className="card-header">
+                        Forest Plot: {outcomeName}
+                    </div>
+                    <div className="card-body">
+                        <div ref={plotRef} className="plot-container"></div>
+                        {pooledEffect && (
+                            <div style={{ marginTop: '20px', padding: '15px', background: '#f5f5f5', borderRadius: '6px' }}>
+                                <strong>Pooled Effect:</strong> {pooledEffect.effect.toFixed(3)}
+                                [{pooledEffect.ci_lower.toFixed(3)}, {pooledEffect.ci_upper.toFixed(3)}]
+                                {pooledEffect.p_value !== undefined && <span>, p = {pooledEffect.p_value.toFixed(3)}</span>}
+                                {pooledEffect.i_squared !== undefined && <span>, I² = {pooledEffect.i_squared.toFixed(1)}%</span>}
+                            </div>
+                        )}
+                    </div>
+                </div>
+            );
+        }
+
+        // ============================================
+        // FUNNEL PLOT COMPONENT
+        // ============================================
+        function FunnelPlot({ data, pooledEffect, effectMeasure = 'OR' }) {
+            const plotRef = React.useRef(null);
+
+            React.useEffect(() => {
+                if (!plotRef.current) return;
+
+                const isLogScale = effectMeasure === 'OR' || effectMeasure === 'RR';
+                const effects = data.map(d => d.effect);
+                const ses = data.map(d => d.se);
+                const names = data.map(d => d.name);
+
+                const maxSe = Math.max(...ses);
+                const seGrid = Array.from({ length: 100 }, (_, i) => (i / 99) * maxSe);
+
+                const upper95 = pooledEffect + 1.96 * seGrid;
+                const lower95 = pooledEffect - 1.96 * seGrid;
+
+                const traces = [
+                    {
+                        x: upper95,
+                        y: seGrid,
+                        mode: 'lines',
+                        line: { color: 'lightgray', width: 1 },
+                        name: '95% CI',
+                        hoverinfo: 'skip'
+                    },
+                    {
+                        x: lower95,
+                        y: seGrid,
+                        mode: 'lines',
+                        line: { color: 'lightgray', width: 1 },
+                        hoverinfo: 'skip',
+                        showlegend: false
+                    },
+                    {
+                        x: [pooledEffect, pooledEffect],
+                        y: [0, maxSe],
+                        mode: 'lines',
+                        line: { color: 'black', width: 2, dash: 'dot' },
+                        name: 'Pooled effect',
+                        hoverinfo: 'skip'
+                    },
+                    {
+                        x: effects,
+                        y: ses,
+                        mode: 'markers',
+                        marker: { size: 10, color: '#1f77b4', opacity: 0.7 },
+                        text: names,
+                        hovertemplate: '%{text}<br>Effect: %{x:.3f}<br>SE: %{y:.3f}<extra></extra>',
+                        name: 'Studies'
+                    }
+                ];
+
+                const layout = {
+                    title: `Funnel Plot (${effectMeasure})`,
+                    xaxis: {
+                        title: isLogScale ? `${effectMeasure} (log scale)` : effectMeasure,
+                        type: isLogScale ? 'log' : 'linear'
+                    },
+                    yaxis: {
+                        title: 'Standard Error',
+                        range: [0, maxSe * 1.1]
+                    },
+                    hovermode: 'closest',
+                    margin: { l: 80, r: 50, t: 50, b: 60 },
+                    showlegend: true,
+                    height: 500
+                };
+
+                Plotly.newPlot(plotRef.current, traces, layout, { responsive: true });
+
+                return () => Plotly.purge(plotRef.current);
+            }, [data, pooledEffect, effectMeasure]);
+
+            return (
+                <div className="card">
+                    <div className="card-header">Funnel Plot</div>
+                    <div className="card-body">
+                        <div ref={plotRef} className="plot-container"></div>
+                        <p style={{ color: '#666', marginTop: '10px' }}>
+                            Funnel plot for assessing publication bias. Points should be symmetrically distributed around the pooled effect.
+                        </p>
+                    </div>
+                </div>
+            );
+        }
+
+        // ============================================
+        // NETWORK PLOT COMPONENT
+        // ============================================
+        function NetworkPlot({ comparisons, treatments }) {
+            const plotRef = React.useRef(null);
+            const [layoutType, setLayoutType] = React.useState('spring');
+
+            React.useEffect(() => {
+                if (!plotRef.current) return;
+
+                // Calculate node positions
+                const nodePositions = {};
+                if (layoutType === 'circular') {
+                    const n = treatments.length;
+                    const radius = 10;
+                    treatments.forEach((t, i) => {
+                        const angle = (2 * Math.PI * i) / n;
+                        nodePositions[t] = {
+                            x: radius * Math.cos(angle),
+                            y: radius * Math.sin(angle)
+                        };
+                    });
+                } else {
+                    treatments.forEach((t, i) => {
+                        const row = Math.floor(i / 3);
+                        const col = i % 3;
+                        nodePositions[t] = {
+                            x: col * 10 - 10,
+                            y: -row * 10 + 5
+                        };
+                    });
+                }
+
+                // Create node trace
+                const nodeX = treatments.map(t => nodePositions[t].x);
+                const nodeY = treatments.map(t => nodePositions[t].y);
+                const nodeSizes = treatments.map(t => {
+                    const count = comparisons.filter(c => c.treatment_a === t || c.treatment_b === t).length;
+                    return 30 + count * 5;
+                });
+
+                // Create edges
+                const pairCounts = {};
+                comparisons.forEach(comp => {
+                    const key = [comp.treatment_a, comp.treatment_b].sort().join('-');
+                    pairCounts[key] = (pairCounts[key] || 0) + 1;
+                });
+
+                const edgeX = [];
+                const edgeY = [];
+                Object.entries(pairCounts).forEach(([key, count]) => {
+                    const [t1, t2] = key.split('-');
+                    edgeX.push(nodePositions[t1].x, nodePositions[t2].x, null);
+                    edgeY.push(nodePositions[t1].y, nodePositions[t2].y, null);
+                });
+
+                const traces = [
+                    {
+                        x: edgeX,
+                        y: edgeY,
+                        mode: 'lines',
+                        line: { color: '#999', width: 2 },
+                        hoverinfo: 'none'
+                    },
+                    {
+                        x: nodeX,
+                        y: nodeY,
+                        mode: 'markers+text',
+                        marker: { size: nodeSizes, color: '#1f77b4', line: { color: 'white', width: 2 } },
+                        text: treatments,
+                        textposition: 'middle center',
+                        textfont: { size: 12, color: 'white', family: 'Arial Black' },
+                        hovertemplate: '%{text}<extra></extra>'
+                    }
+                ];
+
+                const layout = {
+                    title: 'Treatment Network',
+                    xaxis: { showgrid: false, showticklabels: false },
+                    yaxis: { showgrid: false, showticklabels: false, scaleanchor: 'x' },
+                    hovermode: 'closest',
+                    margin: { l: 50, r: 50, t: 50, b: 50 },
+                    showlegend: false,
+                    height: 500
+                };
+
+                Plotly.newPlot(plotRef.current, traces, layout, { responsive: true });
+
+                return () => Plotly.purge(plotRef.current);
+            }, [comparisons, treatments, layoutType]);
+
+            return (
+                <div className="card">
+                    <div className="card-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <span>Network Meta-Analysis</span>
+                        <div className="toggle-group">
+                            <button className={`toggle-btn ${layoutType === 'spring' ? 'active' : ''}`}
+                                    onClick={() => setLayoutType('spring')}>Spring</button>
+                            <button className={`toggle-btn ${layoutType === 'circular' ? 'active' : ''}`}
+                                    onClick={() => setLayoutType('circular')}>Circular</button>
+                        </div>
+                    </div>
+                    <div className="card-body">
+                        <div ref={plotRef} className="plot-container"></div>
+                        <p style={{ color: '#666', marginTop: '10px' }}>
+                            Node size indicates number of comparisons. Line thickness indicates number of studies.
+                        </p>
+                    </div>
+                </div>
+            );
+        }
+
+        // ============================================
+        // FILE UPLOADER COMPONENT
+        // ============================================
+        function StudyUploader({ onUpload }) {
+            const [files, setFiles] = React.useState([]);
+            const [isDragOver, setIsDragOver] = React.useState(false);
+            const [uploading, setUploading] = React.useState(false);
+            const fileInputRef = React.useRef(null);
+
+            const handleDragOver = (e) => {
+                e.preventDefault();
+                setIsDragOver(true);
+            };
+
+            const handleDragLeave = (e) => {
+                e.preventDefault();
+                setIsDragOver(false);
+            };
+
+            const handleDrop = (e) => {
+                e.preventDefault();
+                setIsDragOver(false);
+                const droppedFiles = Array.from(e.dataTransfer.files);
+                setFiles(prev => [...prev, ...droppedFiles.map(f => ({ file: f, status: 'pending' }))]);
+            };
+
+            const handleFileSelect = (e) => {
+                const selectedFiles = Array.from(e.target.files);
+                setFiles(prev => [...prev, ...selectedFiles.map(f => ({ file: f, status: 'pending' }))]);
+            };
+
+            const removeFile = (index) => {
+                setFiles(prev => prev.filter((_, i) => i !== index));
+            };
+
+            const handleUpload = async () => {
+                setUploading(true);
+                const filesToUpload = files.map(f => f.file);
+                try {
+                    await onUpload(filesToUpload);
+                    setFiles([]);
+                } catch (error) {
+                    console.error('Upload failed:', error);
+                } finally {
+                    setUploading(false);
+                }
+            };
+
+            const formatFileSize = (bytes) => {
+                if (bytes < 1024) return bytes + ' B';
+                return (bytes / 1024).toFixed(1) + ' KB';
+            };
+
+            return (
+                <div className="card">
+                    <div className="card-header">Upload Studies</div>
+                    <div className="card-body">
+                        <div
+                            className={`upload-zone ${isDragOver ? 'dragover' : ''}`}
+                            onDragOver={handleDragOver}
+                            onDragLeave={handleDragLeave}
+                            onDrop={handleDrop}
+                            onClick={() => fileInputRef.current.click()}
+                        >
+                            <i className="bi bi-cloud-upload"></i>
+                            <p>Drag and drop files here, or click to browse</p>
+                            <small>Accepted formats: PDF, TXT, CSV, JSON</small>
+                            <input
+                                ref={fileInputRef}
+                                type="file"
+                                multiple
+                                accept=".pdf,.txt,.csv,.json"
+                                style={{ display: 'none' }}
+                                onChange={handleFileSelect}
+                            />
+                        </div>
+
+                        {files.length > 0 && (
+                            <div style={{ marginTop: '20px' }}>
+                                <h6>Files ({files.length})</h6>
+                                {files.map((fileObj, index) => (
+                                    <div key={index} className="file-item">
+                                        <div className="file-info">
+                                            <i className="bi bi-file-earmark file-icon"></i>
+                                            <span>{fileObj.file.name}</span>
+                                            <small style={{ color: '#999' }}>({formatFileSize(fileObj.file.size)})</small>
+                                        </div>
+                                        <button
+                                            className="btn btn-outline"
+                                            style={{ padding: '4px 8px', fontSize: '12px' }}
+                                            onClick={() => removeFile(index)}
+                                        >
+                                            <i className="bi bi-x"></i>
+                                        </button>
+                                    </div>
+                                ))}
+                                <button
+                                    className="btn btn-primary"
+                                    style={{ marginTop: '15px', width: '100%' }}
+                                    onClick={handleUpload}
+                                    disabled={uploading}
+                                >
+                                    {uploading ? 'Uploading...' : `Upload ${files.length} File${files.length > 1 ? 's' : ''}`}
+                                </button>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            );
+        }
+
+        // ============================================
+        // DASHBOARD PAGE
+        // ============================================
+        function DashboardPage({ stats }) {
+            return (
+                <div>
+                    <h2 style={{ marginBottom: '20px' }}>Dashboard</h2>
+                    <p style={{ color: '#666', marginBottom: '30px' }}>
+                        Welcome to the LLM Meta-Analysis Framework
+                    </p>
+
+                    <div className="stats-grid">
+                        <div className="stat-card">
+                            <div className="stat-icon primary">
+                                <i className="bi bi-file-text"></i>
+                            </div>
+                            <div>
+                                <div className="stat-value">{stats.total_studies}</div>
+                                <div className="stat-label">Total Studies</div>
+                            </div>
+                        </div>
+                        <div className="stat-card">
+                            <div className="stat-icon secondary">
+                                <i className="bi bi-gear"></i>
+                            </div>
+                            <div>
+                                <div className="stat-value">{stats.total_extractions}</div>
+                                <div className="stat-label">Extractions</div>
+                            </div>
+                        </div>
+                        <div className="stat-card">
+                            <div className="stat-icon success">
+                                <i className="bi bi-graph-up"></i>
+                            </div>
+                            <div>
+                                <div className="stat-value">{stats.total_analyses}</div>
+                                <div className="stat-label">Analyses</div>
+                            </div>
+                        </div>
+                        <div className="stat-card">
+                            <div className="stat-icon warning">
+                                <i className="bi bi-clock"></i>
+                            </div>
+                            <div>
+                                <div className="stat-value">{stats.pending_jobs}</div>
+                                <div className="stat-label">Pending Jobs</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '20px' }}>
+                        <div className="card">
+                            <div className="card-header">Quick Start</div>
+                            <div className="card-body">
+                                <p style={{ color: '#666', marginBottom: '15px' }}>
+                                    Get started with your meta-analysis project
+                                </p>
+                                <ul className="feature-list">
+                                    <li><strong>Upload Studies:</strong> Go to Extraction to upload PDF or text files</li>
+                                    <li><strong>Run Extraction:</strong> Use LLM to extract data automatically</li>
+                                    <li><strong>Configure Analysis:</strong> Set up meta-analysis parameters</li>
+                                    <li><strong>Generate Reports:</strong> Export PRISMA diagrams and plots</li>
+                                </ul>
+                            </div>
+                        </div>
+                        <div className="card">
+                            <div className="card-header">Features</div>
+                            <div className="card-body">
+                                <p style={{ color: '#666', marginBottom: '15px' }}>
+                                    Advanced capabilities powered by LLMs
+                                </p>
+                                <ul className="feature-list">
+                                    <li>RAG-enhanced data extraction</li>
+                                    <li>Bayesian meta-analysis with MCMC</li>
+                                    <li>Network meta-analysis visualization</li>
+                                    <li>PRISMA workflow automation</li>
+                                    <li>Survival analysis methods</li>
+                                    <li>Causal inference techniques</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        // ============================================
+        // EXTRACTION PAGE
+        // ============================================
+        function ExtractionPage() {
+            const [activeTab, setActiveTab] = React.useState('upload');
+            const [studies, setStudies] = React.useState([]);
+            const [extractionConfig, setExtractionConfig] = React.useState({
+                outcome_type: 'binary',
+                model: 'gpt-4',
+                use_rag: true,
+                use_cot: false
+            });
+            const [showConfig, setShowConfig] = React.useState(false);
+            const [running, setRunning] = React.useState(false);
+            const [results, setResults] = React.useState(null);
+
+            const handleUpload = async (files) => {
+                // Mock upload - in production this would call the API
+                console.log('Uploading files:', files);
+                const newStudies = files.map((file, i) => ({
+                    id: Date.now() + i,
+                    name: file.name.replace(/\.[^/.]+$/, ''),
+                    file: file.name,
+                    size: file.size,
+                    uploadedAt: new Date().toISOString()
+                }));
+                setStudies(prev => [...prev, ...newStudies]);
+                setActiveTab('studies');
+            };
+
+            const handleRunExtraction = async () => {
+                setRunning(true);
+                // Mock extraction
+                await new Promise(resolve => setTimeout(resolve, 2000));
+                setResults({
+                    outcome: 'Primary outcome',
+                    effect_measure: 'Odds Ratio',
+                    extractions: studies.map(s => ({
+                        study_id: s.id,
+                        study_name: s.name,
+                        events_treated: 45,
+                        total_treated: 100,
+                        events_control: 60,
+                        total_control: 100,
+                        effect: 0.58,
+                        ci_lower: 0.35,
+                        ci_upper: 0.95
+                    }))
+                });
+                setRunning(false);
+                setShowConfig(false);
+                setActiveTab('results');
+            };
+
+            return (
+                <div>
+                    <h2 style={{ marginBottom: '20px' }}>Data Extraction</h2>
+                    <p style={{ color: '#666', marginBottom: '30px' }}>
+                        Upload studies and extract data using LLMs
+                    </p>
+
+                    <div className="tabs">
+                        <div className={`tab ${activeTab === 'upload' ? 'active' : ''}`} onClick={() => setActiveTab('upload')}>
+                            Upload Studies
+                        </div>
+                        <div className={`tab ${activeTab === 'studies' ? 'active' : ''}`} onClick={() => setActiveTab('studies')}>
+                            Study List
+                        </div>
+                        <div className={`tab ${activeTab === 'results' ? 'active' : ''}`} onClick={() => setActiveTab('results')}>
+                            Results
+                        </div>
+                    </div>
+
+                    {activeTab === 'upload' && (
+                        <StudyUploader onUpload={handleUpload} />
+                    )}
+
+                    {activeTab === 'studies' && (
+                        <div className="card">
+                            <div className="card-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                <span>Studies ({studies.length})</span>
+                                {studies.length > 0 && (
+                                    <button className="btn btn-primary" onClick={() => setShowConfig(true)}>
+                                        <i className="bi bi-gear"></i> Run Extraction
+                                    </button>
+                                )}
+                            </div>
+                            <div className="card-body">
+                                {studies.length === 0 ? (
+                                    <div className="alert alert-info">
+                                        No studies uploaded yet. Go to the Upload tab to add studies.
+                                    </div>
+                                ) : (
+                                    <div className="table-container">
+                                        <table>
+                                            <thead>
+                                                <tr>
+                                                    <th>Name</th>
+                                                    <th>File</th>
+                                                    <th>Size</th>
+                                                    <th>Uploaded</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {studies.map(study => (
+                                                    <tr key={study.id}>
+                                                        <td>{study.name}</td>
+                                                        <td>{study.file}</td>
+                                                        <td>{(study.size / 1024).toFixed(1)} KB</td>
+                                                        <td>{new Date(study.uploadedAt).toLocaleDateString()}</td>
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    )}
+
+                    {activeTab === 'results' && (
+                        <div className="card">
+                            <div className="card-header">Extraction Results</div>
+                            <div className="card-body">
+                                {!results ? (
+                                    <div className="alert alert-info">
+                                        No extraction results yet. Run an extraction to see results here.
+                                    </div>
+                                ) : (
+                                    <div>
+                                        <h5>{results.outcome}</h5>
+                                        <p>Effect Measure: {results.effect_measure}</p>
+                                        <div className="table-container" style={{ marginTop: '20px' }}>
+                                            <table className="results-table">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Study</th>
+                                                        <th>Events (Tx)</th>
+                                                        <th>Total (Tx)</th>
+                                                        <th>Events (Ctrl)</th>
+                                                        <th>Total (Ctrl)</th>
+                                                        <th>Effect</th>
+                                                        <th>95% CI</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    {results.extractions.map(ext => (
+                                                        <tr key={ext.study_id}>
+                                                            <td>{ext.study_name}</td>
+                                                            <td>{ext.events_treated}</td>
+                                                            <td>{ext.total_treated}</td>
+                                                            <td>{ext.events_control}</td>
+                                                            <td>{ext.total_control}</td>
+                                                            <td>{ext.effect.toFixed(3)}</td>
+                                                            <td>[{ext.ci_lower.toFixed(3)}, {ext.ci_upper.toFixed(3)}]</td>
+                                                        </tr>
+                                                    ))}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Extraction Config Modal */}
+                    {showConfig && (
+                        <div style={{
+                            position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+                            background: 'rgba(0,0,0,0.5)', display: 'flex',
+                            alignItems: 'center', justifyContent: 'center', zIndex: 2000
+                        }}>
+                            <div style={{ background: 'white', padding: '30px', borderRadius: '8px', minWidth: '400px' }}>
+                                <h4>Configure Extraction</h4>
+                                <div className="form-group">
+                                    <label>Outcome Type</label>
+                                    <select className="form-select"
+                                            value={extractionConfig.outcome_type}
+                                            onChange={e => setExtractionConfig({...extractionConfig, outcome_type: e.target.value})}>
+                                        <option value="binary">Binary (events/total)</option>
+                                        <option value="continuous">Continuous (mean/sd)</option>
+                                        <option value="survival">Survival (hazard ratio)</option>
+                                    </select>
+                                </div>
+                                <div className="form-group">
+                                    <label>LLM Model</label>
+                                    <select className="form-select"
+                                            value={extractionConfig.model}
+                                            onChange={e => setExtractionConfig({...extractionConfig, model: e.target.value})}>
+                                        <option value="gpt-4">GPT-4</option>
+                                        <option value="gpt-3.5-turbo">GPT-3.5 Turbo</option>
+                                        <option value="claude-3">Claude 3</option>
+                                        <option value="fine-tuned">Fine-tuned Model</option>
+                                    </select>
+                                </div>
+                                <div className="form-group">
+                                    <label>Advanced Features</label>
+                                    <select className="form-select"
+                                            value={extractionConfig.use_rag ? 'rag' : 'standard'}
+                                            onChange={e => setExtractionConfig({...extractionConfig, use_rag: e.target.value === 'rag'})}>
+                                        <option value="standard">Standard Prompting</option>
+                                        <option value="rag">RAG-Enhanced</option>
+                                        <option value="cot">Chain-of-Thought</option>
+                                        <option value="ensemble">Ensemble (Multiple Models)</option>
+                                    </select>
+                                </div>
+                                <div style={{ display: 'flex', gap: '10px', marginTop: '20px' }}>
+                                    <button className="btn btn-outline" style={{ flex: 1 }} onClick={() => setShowConfig(false)}>
+                                        Cancel
+                                    </button>
+                                    <button className="btn btn-primary" style={{ flex: 1 }} onClick={handleRunExtraction} disabled={running}>
+                                        {running ? 'Running...' : 'Run Extraction'}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            );
+        }
+
+        // ============================================
+        // ANALYSIS PAGE
+        // ============================================
+        function AnalysisPage() {
+            const [config, setConfig] = React.useState({
+                outcome_type: 'binary',
+                effect_measure: 'OR',
+                model_type: 'random',
+                ci_method: 'hksj'
+            });
+            const [running, setRunning] = React.useState(false);
+            const [result, setResult] = React.useState(null);
+            const [plotType, setPlotType] = React.useState('forest');
+
+            // Mock data
+            const mockForestData = [
+                { study_id: '1', name: 'Study A (2023)', effect: 0.75, ci_lower: 0.55, ci_upper: 1.02, weight: 25 },
+                { study_id: '2', name: 'Study B (2022)', effect: 0.68, ci_lower: 0.48, ci_upper: 0.96, weight: 30 },
+                { study_id: '3', name: 'Study C (2023)', effect: 0.82, ci_lower: 0.60, ci_upper: 1.12, weight: 20 },
+                { study_id: '4', name: 'Study D (2021)', effect: 0.65, ci_lower: 0.50, ci_upper: 0.85, weight: 25 }
+            ];
+
+            const mockPooledEffect = {
+                effect: 0.72,
+                ci_lower: 0.58,
+                ci_upper: 0.89,
+                p_value: 0.002,
+                i_squared: 28.5
+            };
+
+            const mockFunnelData = mockForestData.map(d => ({
+                ...d,
+                se: (Math.log(d.ci_upper) - Math.log(d.ci_lower)) / (2 * 1.96)
+            }));
+
+            const mockNetworkComparisons = [
+                { study_id: '1', treatment_a: 'Treatment A', treatment_b: 'Control' },
+                { study_id: '2', treatment_a: 'Treatment B', treatment_b: 'Control' },
+                { study_id: '3', treatment_a: 'Treatment A', treatment_b: 'Treatment B' },
+                { study_id: '4', treatment_a: 'Treatment C', treatment_b: 'Control' }
+            ];
+
+            const mockTreatments = ['Control', 'Treatment A', 'Treatment B', 'Treatment C'];
+
+            const handleRunAnalysis = async () => {
+                setRunning(true);
+                await new Promise(resolve => setTimeout(resolve, 1500));
+                setResult({
+                    pooled_effect: mockPooledEffect,
+                    studies: mockForestData
+                });
+                setRunning(false);
+            };
+
+            return (
+                <div>
+                    <h2 style={{ marginBottom: '20px' }}>Meta-Analysis</h2>
+                    <p style={{ color: '#666', marginBottom: '30px' }}>
+                        Configure and run meta-analysis with advanced statistical methods
+                    </p>
+
+                    <div className="two-column">
+                        {/* Configuration Panel */}
+                        <div className="card">
+                            <div className="card-header">Configuration</div>
+                            <div className="card-body">
+                                <div className="form-group">
+                                    <label>Outcome Type</label>
+                                    <select className="form-select"
+                                            value={config.outcome_type}
+                                            onChange={e => setConfig({...config, outcome_type: e.target.value})}>
+                                        <option value="binary">Binary</option>
+                                        <option value="continuous">Continuous</option>
+                                    </select>
+                                </div>
+                                <div className="form-group">
+                                    <label>Effect Measure</label>
+                                    <select className="form-select"
+                                            value={config.effect_measure}
+                                            onChange={e => setConfig({...config, effect_measure: e.target.value})}>
+                                        <option value="OR">Odds Ratio</option>
+                                        <option value="RR">Risk Ratio</option>
+                                        <option value="RD">Risk Difference</option>
+                                        <option value="MD">Mean Difference</option>
+                                        <option value="SMD">Std. Mean Difference</option>
+                                    </select>
+                                </div>
+                                <div className="form-group">
+                                    <label>Model Type</label>
+                                    <select className="form-select"
+                                            value={config.model_type}
+                                            onChange={e => setConfig({...config, model_type: e.target.value})}>
+                                        <option value="fixed">Fixed Effect</option>
+                                        <option value="random">Random Effects</option>
+                                    </select>
+                                </div>
+                                <div className="form-group">
+                                    <label>CI Method</label>
+                                    <select className="form-select"
+                                            value={config.ci_method}
+                                            onChange={e => setConfig({...config, ci_method: e.target.value})}>
+                                        <option value="wald">Wald</option>
+                                        <option value="hksj">Hartung-Knapp-Sidik-Jonkman</option>
+                                        <option value="profile">Profile Likelihood</option>
+                                        <option value="bootstrap">Bootstrap</option>
+                                    </select>
+                                </div>
+                                <button className="btn btn-primary" style={{ width: '100%' }}
+                                        onClick={handleRunAnalysis} disabled={running}>
+                                    {running ? 'Running...' : 'Run Analysis'}
+                                </button>
+
+                                {result && (
+                                    <div style={{ marginTop: '20px', padding: '15px', background: '#f5f5f5', borderRadius: '6px' }}>
+                                        <h6>Results Summary</h6>
+                                        <p style={{ margin: '5px 0' }}>
+                                            <strong>Pooled Effect:</strong> {result.pooled_effect.effect.toFixed(3)}<br/>
+                                            [<strong>{result.pooled_effect.ci_lower.toFixed(3)}, {result.pooled_effect.ci_upper.toFixed(3)}</strong>]
+                                        </p>
+                                        <p style={{ margin: '5px 0' }}>
+                                            <strong>p-value:</strong> {result.pooled_effect.p_value.toFixed(4)}
+                                        </p>
+                                        <p style={{ margin: '5px 0' }}>
+                                            <strong>I²:</strong> {result.pooled_effect.i_squared.toFixed(1)}%
+                                        </p>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+                        {/* Visualization Panel */}
+                        <div>
+                            <div className="card">
+                                <div className="card-header">
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                        <span>Plots</span>
+                                        <div className="toggle-group">
+                                            <button className={`toggle-btn ${plotType === 'forest' ? 'active' : ''}`}
+                                                    onClick={() => setPlotType('forest')}>Forest</button>
+                                            <button className={`toggle-btn ${plotType === 'funnel' ? 'active' : ''}`}
+                                                    onClick={() => setPlotType('funnel')}>Funnel</button>
+                                            <button className={`toggle-btn ${plotType === 'network' ? 'active' : ''}`}
+                                                    onClick={() => setPlotType('network')}>Network</button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className="card-body">
+                                    {plotType === 'forest' && (
+                                        <ForestPlot
+                                            data={result?.studies || mockForestData}
+                                            pooledEffect={result?.pooled_effect || mockPooledEffect}
+                                            outcomeName="Primary Outcome"
+                                            effectMeasure={config.effect_measure}
+                                        />
+                                    )}
+
+                                    {plotType === 'funnel' && (
+                                        <FunnelPlot
+                                            data={mockFunnelData}
+                                            pooledEffect={mockPooledEffect.effect}
+                                            effectMeasure={config.effect_measure}
+                                        />
+                                    )}
+
+                                    {plotType === 'network' && (
+                                        <NetworkPlot
+                                            comparisons={mockNetworkComparisons}
+                                            treatments={mockTreatments}
+                                        />
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        // ============================================
+        // REPORTS PAGE
+        // ============================================
+        function ReportsPage() {
+            const [activeTab, setActiveTab] = React.useState('prisma');
+            const [exportFormat, setExportFormat] = React.useState('pdf');
+
+            const mockPrismaData = {
+                identified: 1234,
+                duplicates_removed: 56,
+                records_screened: 1178,
+                records_excluded: 1098,
+                full_text_assessed: 80,
+                full_text_excluded: 45,
+                studies_included: 35
+            };
+
+            const mockRobData = [
+                { study_id: '1', study_name: 'Smith et al. (2023)', d1: 'Low', d2: 'Low', d3: 'Low', d4: 'Low', d5: 'Low', overall: 'Low' },
+                { study_id: '2', study_name: 'Johnson et al. (2022)', d1: 'Some concerns', d2: 'Low', d3: 'Low', d4: 'Low', d5: 'Low', overall: 'Some concerns' },
+                { study_id: '3', study_name: 'Williams et al. (2023)', d1: 'Low', d2: 'Low', d3: 'Some concerns', d4: 'Low', d5: 'Low', overall: 'Some concerns' }
+            ];
+
+            const getRobClass = (judgment) => {
+                const j = judgment.toLowerCase();
+                if (j === 'low') return 'rob-low';
+                if (j === 'some concerns') return 'rob-some';
+                return 'rob-high';
+            };
+
+            const handleExport = (format) => {
+                console.log('Exporting as', format);
+                // In production, this would call the API
+            };
+
+            return (
+                <div>
+                    <h2 style={{ marginBottom: '20px' }}>Reports</h2>
+                    <p style={{ color: '#666', marginBottom: '30px' }}>
+                        Generate PRISMA diagrams, risk of bias assessments, and export results
+                    </p>
+
+                    <div className="two-column">
+                        {/* Export Options */}
+                        <div>
+                            <div className="card">
+                                <div className="card-header">Export Results</div>
+                                <div className="card-body">
+                                    <p style={{ color: '#666', marginBottom: '15px' }}>
+                                        Download analysis results in various formats
+                                    </p>
+                                    <button className="btn btn-outline" style={{ width: '100%', marginBottom: '10px' }}
+                                            onClick={() => handleExport('pdf')}>
+                                        <i className="bi bi-file-pdf"></i> Export as PDF
+                                    </button>
+                                    <button className="btn btn-outline" style={{ width: '100%', marginBottom: '10px' }}
+                                            onClick={() => handleExport('csv')}>
+                                        <i className="bi bi-file-csv"></i> Export as CSV
+                                    </button>
+                                    <button className="btn btn-outline" style={{ width: '100%' }}
+                                            onClick={() => handleExport('json')}>
+                                        <i className="bi bi-file-code"></i> Export as JSON
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div className="card" style={{ marginTop: '20px' }}>
+                                <div className="card-header">PRISMA 2020</div>
+                                <div className="card-body">
+                                    <p style={{ color: '#666', marginBottom: '15px' }}>
+                                        Generate PRISMA flow diagram for publication
+                                    </p>
+                                    <button className="btn btn-primary" style={{ width: '100%' }}
+                                            onClick={() => handleExport('prisma-pdf')}>
+                                        <i className="bi bi-download"></i> Download PRISMA Diagram
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Main Content */}
+                        <div className="card">
+                            <div className="tabs">
+                                <div className={`tab ${activeTab === 'prisma' ? 'active' : ''}`} onClick={() => setActiveTab('prisma')}>
+                                    PRISMA Flow
+                                </div>
+                                <div className={`tab ${activeTab === 'rob' ? 'active' : ''}`} onClick={() => setActiveTab('rob')}>
+                                    Risk of Bias
+                                </div>
+                                <div className={`tab ${activeTab === 'summary' ? 'active' : ''}`} onClick={() => setActiveTab('summary')}>
+                                    Summary
+                                </div>
+                            </div>
+
+                            <div className="card-body">
+                                {activeTab === 'prisma' && (
+                                    <div>
+                                        <h5 style={{ marginBottom: '15px' }}>PRISMA 2020 Flow Diagram</h5>
+                                        <div className="prisma-diagram">
+                                            <h6 style={{ textAlign: 'center', marginBottom: '15px' }}>Identification</h6>
+                                            <div className="prisma-box">
+                                                Records identified from databases (n = {mockPrismaData.identified})
+                                            </div>
+                                            <div className="prisma-arrow">↓</div>
+                                            <div className="prisma-box">
+                                                Records after duplicates removed (n = {mockPrismaData.identified - mockPrismaData.duplicates_removed})
+                                            </div>
+
+                                            <h6 style={{ textAlign: 'center', marginTop: '20px', marginBottom: '15px' }}>Screening</h6>
+                                            <div className="prisma-box">
+                                                Records screened (n = {mockPrismaData.records_screened})
+                                            </div>
+                                            <div className="prisma-arrow">↓</div>
+                                            <div className="prisma-box">
+                                                Full-text articles assessed (n = {mockPrismaData.full_text_assessed})
+                                            </div>
+
+                                            <h6 style={{ textAlign: 'center', marginTop: '20px', marginBottom: '15px' }}>Included</h6>
+                                            <div className="prisma-box" style={{ background: '#e8f5e9', borderColor: '#4caf50' }}>
+                                                Studies included in review (n = {mockPrismaData.studies_included})
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {activeTab === 'rob' && (
+                                    <div>
+                                        <h5 style={{ marginBottom: '15px' }}>Risk of Bias Assessment (RoB 2)</h5>
+                                        <p style={{ color: '#666', marginBottom: '15px' }}>
+                                            Assessment of risk of bias for randomized trials
+                                        </p>
+                                        <div className="table-container">
+                                            <table className="results-table">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Study</th>
+                                                        <th>D1</th>
+                                                        <th>D2</th>
+                                                        <th>D3</th>
+                                                        <th>D4</th>
+                                                        <th>D5</th>
+                                                        <th>Overall</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    {mockRobData.map(row => (
+                                                        <tr key={row.study_id}>
+                                                            <td>{row.study_name}</td>
+                                                            <td><span className={`rob-badge ${getRobClass(row.d1)}`}>{row.d1}</span></td>
+                                                            <td><span className={`rob-badge ${getRobClass(row.d2)}`}>{row.d2}</span></td>
+                                                            <td><span className={`rob-badge ${getRobClass(row.d3)}`}>{row.d3}</span></td>
+                                                            <td><span className={`rob-badge ${getRobClass(row.d4)}`}>{row.d4}</span></td>
+                                                            <td><span className={`rob-badge ${getRobClass(row.d5)}`}>{row.d5}</span></td>
+                                                            <td><span className={`rob-badge ${getRobClass(row.overall)}`}>{row.overall}</span></td>
+                                                        </tr>
+                                                    ))}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                        <small style={{ color: '#999' }}>
+                                            D1: Randomization | D2: Deviations | D3: Missing data | D4: Outcome measurement | D5: Selection of reported result
+                                        </small>
+                                    </div>
+                                )}
+
+                                {activeTab === 'summary' && (
+                                    <div>
+                                        <h5 style={{ marginBottom: '15px' }}>Analysis Summary</h5>
+                                        <div className="alert alert-info">
+                                            Run an analysis to see summary statistics and recommendations for reporting
+                                        </div>
+                                        <p style={{ marginTop: '20px' }}>Based on your analysis, ensure your report includes:</p>
+                                        <ul className="feature-list">
+                                            <li>Forest plot with effect sizes and confidence intervals</li>
+                                            <li>Heterogeneity statistics (I², τ², Q-test)</li>
+                                            <li>Risk of bias assessment table</li>
+                                            <li>PRISMA flow diagram</li>
+                                            <li>Sensitivity analysis results (if applicable)</li>
+                                        </ul>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        // ============================================
+        // LOADING SCREEN
+        // ============================================
+        function LoadingScreen() {
+            return (
+                <div className="loading-screen">
+                    <div className="spinner"></div>
+                    <h3>Loading LLM Meta-Analysis Framework...</h3>
+                </div>
+            );
+        }
+
+        // ============================================
+        // MAIN APP
+        // ============================================
+        function App() {
+            const [currentPage, setCurrentPage] = React.useState('dashboard');
+            const [loading, setLoading] = React.useState(true);
+            const [apiStatus, setApiStatus] = React.useState('connected');
+            const [stats, setStats] = React.useState({
+                total_studies: 24,
+                total_extractions: 156,
+                total_analyses: 43,
+                pending_jobs: 3
+            });
+            const [sidebarOpen, setSidebarOpen] = React.useState(false);
+
+            React.useEffect(() => {
+                // Check API connection
+                API.getHealth()
+                    .then(() => {
+                        setApiStatus('connected');
+                        setLoading(false);
+                    })
+                    .catch(() => {
+                        setApiStatus('error');
+                        setLoading(false);
+                    });
+            }, []);
+
+            if (loading) {
+                return <LoadingScreen />;
+            }
+
+            if (apiStatus === 'error') {
+                return (
+                    <div className="loading-screen">
+                        <i className="bi bi-exclamation-triangle" style={{ fontSize: '3rem', color: '#f44336' }}></i>
+                        <h3 style={{ color: '#666' }}>API Connection Error</h3>
+                        <p style={{ color: '#999' }}>Unable to connect to the backend server.</p>
+                        <p style={{ color: '#999' }}>Make sure the API is running on http://localhost:8000</p>
+                        <button className="btn btn-primary" onClick={() => window.location.reload()}>
+                            Retry
+                        </button>
+                    </div>
+                );
+            }
+
+            const navItems = [
+                { id: 'dashboard', label: 'Dashboard', icon: 'bi-speedometer2' },
+                { id: 'extraction', label: 'Extraction', icon: 'bi-gear' },
+                { id: 'analysis', label: 'Analysis', icon: 'bi-graph-up' },
+                { id: 'reports', label: 'Reports', icon: 'bi-file-text' }
+            ];
+
+            const renderPage = () => {
+                switch (currentPage) {
+                    case 'dashboard': return <DashboardPage stats={stats} />;
+                    case 'extraction': return <ExtractionPage />;
+                    case 'analysis': return <AnalysisPage />;
+                    case 'reports': return <ReportsPage />;
+                    default: return <DashboardPage stats={stats} />;
+                }
+            };
+
+            return (
+                <div className="app-container">
+                    {/* Mobile Sidebar Toggle */}
+                    <div className="mobile-menu-btn" style={{
+                        position: 'fixed', top: '10px', left: '10px', zIndex: 1001,
+                        background: 'var(--primary-color)', color: 'white', width: '40px',
+                        height: '40px', borderRadius: '8px', display: 'flex',
+                        alignItems: 'center', justifyContent: 'center', cursor: 'pointer'
+                    }} onClick={() => setSidebarOpen(!sidebarOpen)}>
+                        <i className={`bi bi-${sidebarOpen ? 'x' : 'list'}`}></i>
+                    </div>
+
+                    {/* Sidebar */}
+                    <div className={`sidebar ${sidebarOpen ? 'open' : ''}`}>
+                        <div className="sidebar-header">
+                            <h4>LLM Meta-Analysis</h4>
+                        </div>
+                        <nav className="sidebar-nav">
+                            {navItems.map(item => (
+                                <a key={item.id}
+                                   className={`nav-item ${currentPage === item.id ? 'active' : ''}`}
+                                   onClick={() => { setCurrentPage(item.id); setSidebarOpen(false); }}>
+                                    <i className={`bi ${item.icon}`}></i>
+                                    <span>{item.label}</span>
+                                </a>
+                            ))}
+                        </nav>
+                    </div>
+
+                    {/* Main Content */}
+                    <div className="main-content">
+                        <div className="top-bar">
+                            <h5>{navItems.find(i => i.id === currentPage)?.label || 'Dashboard'}</h5>
+                            <div className="connection-status">
+                                <div className={`status-dot ${apiStatus}`}></div>
+                                <span>{apiStatus === 'connected' ? 'Connected' : 'Disconnected'}</span>
+                            </div>
+                        </div>
+                        {renderPage()}
+                    </div>
+                </div>
+            );
+        }
+
+        // ============================================
+        // RENDER
+        // ============================================
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>

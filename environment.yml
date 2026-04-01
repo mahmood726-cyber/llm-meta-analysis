@@ -1,0 +1,47 @@
+name: llm-meta-analysis
+channels:
+  - defaults
+  - conda-forge
+dependencies:
+  - python=3.11
+  - conda-forge::python-dotenv
+  - conda-forge::jupyterlab
+  - anaconda::pyyaml
+  - conda-forge::openai
+  - anaconda::jinja2
+  - pytorch
+  - torchvision
+  - pytorch-cuda=12.1
+  - torchaudio
+  - lxml
+  - beautifulsoup4
+  - sentencepiece
+  - conda-forge::bitsandbytes
+  - conda-forge::ninja
+  - conda-forge::accelerate
+  - transformers=4.38.2
+  - anaconda::cudatoolkit
+  - anaconda::ipykernel
+  - conda-forge::packaging
+  - conda-forge::tiktoken
+  - anaconda::scikit-learn
+  - conda-forge::pandoc
+  - anaconda::nltk
+  - conda-forge::statsmodels
+  - pip:
+    - ai2-olmo
+    - pypandoc
+    - numerizer
+    - anthropic
+    - google-generativeai
+    - matplotlib
+    - seaborn
+    - plotly
+    - flask
+    - flask-cors
+    - pydantic
+    - fastapi
+    - uvicorn
+    - pytest
+    - pytest-asyncio
+    - aiofiles

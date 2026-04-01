@@ -1,0 +1,73 @@
+# Dockerfile for LLM Worker (with GPU support)
+FROM nvidia/cuda:12.1-runtime-ubuntu22.04
+
+# Set environment variables
+ENV DEBIAN_FRONTEND=noninteractive \
+    PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PATH=/root/.local/bin:$PATH
+
+# Install Python and dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    python3.11 \
+    python3-pip \
+    python3.11-venv \
+    git \
+    curl \
+    cuda-libraries-12-1 \
+    && rm -rf /var/lib/apt/lists/*
+
+# Create symbolic link for python
+RUN ln -s /usr/bin/python3.11 /usr/bin/python
+
+# Set work directory
+WORKDIR /app
+
+# Copy requirements
+COPY evaluation/requirements.txt .
+
+# Install Python dependencies
+# Note: GPU-specific packages like torch, transformers will install CUDA versions
+RUN pip3 install --no-cache-dir --upgrade pip && \
+    pip3 install --no-cache-dir \
+    torch>=2.0.0 \
+    transformers>=4.38.0 \
+    accelerate \
+    bitsandbytes \
+    peft \
+    sentence-transformers \
+    faiss-cpu \
+    numpy \
+    pandas \
+    scipy \
+    scikit-learn \
+    openai \
+    anthropic \
+    google-generativeai \
+    fastapi \
+    uvicorn \
+    redis \
+    celery \
+    pydantic \
+    pydantic-settings \
+    python-multipart
+
+# Copy application code
+COPY evaluation/ ./evaluation/
+
+# Create models directory for caching
+RUN mkdir -p /app/models && chmod 777 /app/models
+
+# Environment variable for model cache
+ENV HF_HOME=/app/models \
+    TRANSFORMERS_CACHE=/app/models
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
+    CMD curl -f http://localhost:8001/health || exit 1
+
+# Expose port
+EXPOSE 8001
+
+# Run the worker
+CMD ["python3", "-m", "evaluation.worker"]

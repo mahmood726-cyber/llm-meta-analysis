@@ -1,0 +1,161 @@
+# Docker Compose for LLM Meta-Analysis Framework
+# Local development environment
+
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: llmma-postgres
+    environment:
+      POSTGRES_DB: llmma
+      POSTGRES_USER: llmma_user
+      POSTGRES_PASSWORD: llmma_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./docker/init:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U llmma_user -d llmma"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - llmma-network
+
+  # Redis for caching and job queue
+  redis:
+    image: redis:7-alpine
+    container_name: llmma-redis
+    ports:
+      - "6379:6379"
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - llmma-network
+
+  # API Server
+  api:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.api
+    container_name: llmma-api
+    environment:
+      DATABASE_URL: postgresql://llmma_user:llmma_password@postgres:5432/llmma
+      REDIS_URL: redis://redis:6379/0
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      GOOGLE_API_KEY: ${GOOGLE_API_KEY:-}
+      HF_TOKEN: ${HF_TOKEN:-}
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./evaluation:/app/evaluation:ro
+      - ./data:/app/data:ro
+    networks:
+      - llmma-network
+    restart: unless-stopped
+
+  # LLM Worker (CPU only for development)
+  worker:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.worker
+    container_name: llmma-worker
+    environment:
+      DATABASE_URL: postgresql://llmma_user:llmma_password@postgres:5432/llmma
+      REDIS_URL: redis://redis:6379/0
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      GOOGLE_API_KEY: ${GOOGLE_API_KEY:-}
+      HF_TOKEN: ${HF_TOKEN:-}
+      WORKER_CONCURRENCY: 2
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./evaluation:/app/evaluation:ro
+      - ./data:/app/data:ro
+      - model_cache:/app/models
+    networks:
+      - llmma-network
+    restart: unless-stopped
+    deploy:
+      replicas: 2
+
+  # Frontend (development mode with hot reload)
+  frontend:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.web
+    container_name: llmma-frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      - api
+    networks:
+      - llmma-network
+    restart: unless-stopped
+
+  # Prometheus for metrics
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: llmma-prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./docker/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/usr/share/prometheus/console_libraries'
+      - '--web.console.templates=/usr/share/prometheus/consoles'
+    networks:
+      - llmma-network
+    restart: unless-stopped
+
+  # Grafana for dashboards
+  grafana:
+    image: grafana/grafana:latest
+    container_name: llmma-grafana
+    ports:
+      - "3001:3000"
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin
+      GF_USERS_ALLOW_SIGN_UP: false
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./docker/grafana/provisioning:/etc/grafana/provisioning:ro
+    depends_on:
+      - prometheus
+    networks:
+      - llmma-network
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  redis_data:
+  model_cache:
+  prometheus_data:
+  grafana_data:
+
+networks:
+  llmma-network:
+    driver: bridge

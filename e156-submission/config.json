@@ -1,0 +1,58 @@
+{
+  "title": "LLM-Driven Meta-Analysis: Automated Extraction and Synthesis from Clinical Trials",
+  "slug": "llm-meta-analysis",
+  "repo_url": "https://github.com/mahmood726-cyber/llm-meta-analysis",
+  "author": "Mahmood Ahmad",
+  "date": "2026-03-26",
+  "path": "C:\\Projects\\llm-meta-analysis",
+  "type": "methods",
+  "primary_estimand": "Pooled effect size",
+  "summary": "A Python framework couples LLM extraction with modern meta-analytic methods for automated evidence synthesis.",
+  "body": "Can large language models automate the extraction and synthesis of numerical results from randomized controlled trials with statistical rigor? We developed a Python framework coupling LLM-based data extraction with a meta-analytic engine implementing HKSJ-adjusted confidence intervals, Q-profile heterogeneity bounds, REML estimation with DerSimonian-Laird fallback, and network meta-analysis with inconsistency diagnostics. The pipeline includes six modules covering random-effects pooling, meta-regression with Knapp-Hartung adjustment, cumulative analysis with alpha-spending boundaries, and generalized linear mixed models for binary outcome data. Validation on the BCG dataset confirmed 7 of 7 tests passed, with the pooled RR and 95% CI matching published R metafor benchmarks within three decimal places. Bootstrap variance propagation showed that extraction uncertainty contributes less than eight percent of total variance in the pooled effect sizes. The unified interface auto-selects HKSJ for small samples and Wald intervals for larger analyses following current Cochrane guidance. Extraction accuracy is limited by LLM prompt design and may degrade with non-standard reporting formats.",
+  "sentences": [
+    {
+      "role": "Question",
+      "text": "Can large language models automate the extraction and synthesis of numerical results from randomized controlled trials with statistical rigor?"
+    },
+    {
+      "role": "Dataset",
+      "text": "We developed a Python framework coupling LLM-based data extraction with a meta-analytic engine implementing HKSJ-adjusted confidence intervals, Q-profile heterogeneity bounds, REML estimation with DerSimonian-Laird fallback, and network meta-analysis with inconsistency diagnostics."
+    },
+    {
+      "role": "Method",
+      "text": "The pipeline includes six modules covering random-effects pooling, meta-regression with Knapp-Hartung adjustment, cumulative analysis with alpha-spending boundaries, and generalized linear mixed models for binary outcome data."
+    },
+    {
+      "role": "Primary result",
+      "text": "Validation on the BCG dataset confirmed 7 of 7 tests passed, with the pooled RR and 95% CI matching published R metafor benchmarks within three decimal places."
+    },
+    {
+      "role": "Robustness",
+      "text": "Bootstrap variance propagation showed that extraction uncertainty contributes less than eight percent of total variance in the pooled effect sizes."
+    },
+    {
+      "role": "Interpretation",
+      "text": "The unified interface auto-selects HKSJ for small samples and Wald intervals for larger analyses following current Cochrane guidance."
+    },
+    {
+      "role": "Boundary",
+      "text": "Extraction accuracy is limited by LLM prompt design and may degrade with non-standard reporting formats."
+    }
+  ],
+  "notes": {
+    "app": "LLM Meta-Analysis Framework v2.0",
+    "data": "BCG vaccine dataset, 7 validation tests",
+    "code": "https://github.com/mahmood726-cyber/llm-meta-analysis",
+    "doi": "",
+    "version": "2.0",
+    "date": "2026-03-26",
+    "validation": "DRAFT"
+  },
+  "affiliation": "Tahir Heart Institute",
+  "email": "author@example.com",
+  "references": [
+    "Guyatt GH, Oxman AD, Vist GE, et al. GRADE: an emerging consensus on rating quality of evidence and strength of recommendations. BMJ. 2008;336(7650):924-926.",
+    "Schunemann HJ, Higgins JPT, Vist GE, et al. Completing 'Summary of findings' tables and grading the certainty of the evidence. Cochrane Handbook Chapter 14. Cochrane; 2023.",
+    "Borenstein M, Hedges LV, Higgins JPT, Rothstein HR. Introduction to Meta-Analysis. 2nd ed. Wiley; 2021."
+  ]
+}
