@@ -1,7 +1,6 @@
 {
   "title": "LLM-Driven Meta-Analysis: Automated Extraction and Synthesis from Clinical Trials",
   "slug": "llm-meta-analysis",
-  "repo_url": "https://github.com/mahmood726-cyber/llm-meta-analysis",
   "author": "Mahmood Ahmad",
   "date": "2026-03-26",
   "body": "Can large language models automate the extraction and synthesis of numerical results from randomized controlled trials with statistical rigor? We developed a Python framework coupling LLM-based data extraction with a meta-analytic engine implementing HKSJ-adjusted confidence intervals, Q-profile heterogeneity bounds, REML estimation with DerSimonian-Laird fallback, and network meta-analysis with inconsistency diagnostics. The pipeline includes six modules covering random-effects pooling, meta-regression with Knapp-Hartung adjustment, cumulative analysis with alpha-spending boundaries, and generalized linear mixed models for binary outcome data. Validation on the BCG dataset confirmed 7 of 7 tests passed, with the pooled RR and 95% CI matching published R metafor benchmarks within three decimal places. Bootstrap variance propagation showed that extraction uncertainty contributes less than eight percent of total variance in the pooled effect sizes. The unified interface auto-selects HKSJ for small samples and Wald intervals for larger analyses following current Cochrane guidance. Extraction accuracy is limited by LLM prompt design and may degrade with non-standard reporting formats.",
@@ -79,7 +78,7 @@
       {
         "name": "result sentence has interval",
         "ok": true,
-        "detail": "Sentence 4 should include a confidence interval."
+        "detail": "Sentence 4 should include a quantitative result such as a percentage, count, or interval."
       },
       {
         "name": "result sentence has estimand",
@@ -93,6 +92,5 @@
       }
     ]
   },
-  "schema": "e156-v0.2",
-  "github": "https://github.com/mahmood726-cyber/llm-meta-analysis"
+  "schema": "e156-v0.2"
 }
