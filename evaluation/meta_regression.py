@@ -369,7 +369,7 @@ class MetaRegressionAnalyzer:
             x_new = np.array([1] + [new_covariates[k].iloc[0]
                                           for k in sorted(new_covariates.columns)])
         else:
-            x_new = np.array([1] + list(new_covariates)])
+            x_new = np.array([1] + list(new_covariates))
 
         # Point prediction
         prediction = x_new @ beta

@@ -1,6 +1,6 @@
 import argparse
 import os
-from utils import (
+from .utils import (
     load_json_file,
     convert_character_to_string_outcome_type,
     save_json_file,
@@ -11,7 +11,7 @@ from utils import (
     aggregate_yaml_output_for_binary_outcomes,
     aggregate_yaml_output_for_continuous_outcomes
 )
-from calculate_metrics import MetricsCalculator
+from .calculate_metrics import MetricsCalculator
 import yaml
 import json
 from typing import Optional

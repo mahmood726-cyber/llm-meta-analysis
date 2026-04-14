@@ -12,7 +12,7 @@ from dataclasses import dataclass, asdict
 from scipy import stats
 from sklearn.metrics import f1_score, cohen_kappa_score
 
-from statistical_framework import (
+from .statistical_framework import (
     UncertaintyQuantifier,
     UncertaintyInterval,
     EnhancedHeterogeneity,

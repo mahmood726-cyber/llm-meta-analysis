@@ -80,9 +80,9 @@ class PublicationBiasAssessment:
     egger_ci: UncertaintyInterval
     beggs_z: float
     beggs_p_value: float
+    funnel_plot_asymmetry: str
     trim_and_fill_adjusted: Optional[float] = None
     n_missing_studies: Optional[int] = None
-    funnel_plot_asymmetry: str
 
     def interpretation(self) -> str:
         """Interpret publication bias assessment"""

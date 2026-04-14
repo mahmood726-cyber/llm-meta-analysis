@@ -8,6 +8,8 @@ References:
 - Dettmers et al. (2023). QLoRA: Efficient Finetuning of Quantized LLMs.
 """
 
+from __future__ import annotations
+
 import os
 import json
 from pathlib import Path

@@ -23,29 +23,29 @@ import json
 import warnings
 
 # Import revised modules
-from statistical_framework_v2 import (
+from .statistical_framework_v2 import (
     AdvancedMetaAnalysis, QualityEffectsModel,
     HeterogeneityStatistics, UncertaintyInterval,
     BootstrapVariancePropagation
 )
-from meta_regression_v2 import (
+from .meta_regression_v2 import (
     AdvancedMetaRegression, MetaRegressionModelSelection,
     MulticollinearityChecker, MetaRegressionResult
 )
-from cumulative_analysis_v2 import (
+from .cumulative_analysis_v2 import (
     CumulativeMetaAnalyzer, TrialSequentialAnalyzer
 )
-from bayesian_meta_analysis import BayesianMetaAnalyzer
-from network_meta_analysis import NetworkMetaAnalyzer
-from ml_quality_assessment import (
+from .bayesian_meta_analysis import BayesianMetaAnalyzer
+from .network_meta_analysis import NetworkMetaAnalyzer
+from .ml_quality_assessment import (
     RuleBasedQualityAssessor, IntegratedQualityAssessor
 )
-from sensitivity_analysis import (
+from .sensitivity_analysis import (
     SensitivityAnalyzer, OutlierDetector, ModelComparisonAnalyzer
 )
-from clinical_decision_support import ClinicalDecisionSupportEngine
-from report_generator import PRISMAReportGenerator, StudyData, MetaAnalysisResults
-from cross_validation import MetaAnalysisCrossValidator, MetaAnalysisModelSelector
+from .clinical_decision_support import ClinicalDecisionSupportEngine
+from .report_generator import PRISMAReportGenerator, StudyData, MetaAnalysisResults
+from .cross_validation import MetaAnalysisCrossValidator, MetaAnalysisModelSelector
 
 
 @dataclass

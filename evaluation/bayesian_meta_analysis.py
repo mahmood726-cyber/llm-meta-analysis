@@ -35,10 +35,10 @@ class BayesianMetaAnalysisResult:
     tau_posterior_sd: float
     tau_hdi_95: Tuple[float, float]
     i_squared_posterior_mean: float
-    r_hat: Optional[float] = None  # Gelman-Rubin diagnostic
-    ess_bulk: Optional[float] = None  # Effective sample size
     n_studies: int
     n_iterations: int
+    r_hat: Optional[float] = None  # Gelman-Rubin diagnostic
+    ess_bulk: Optional[float] = None  # Effective sample size
     converged: bool = True
 
 
@@ -321,7 +321,7 @@ class BayesianMetaAnalyzer:
         k = len(events_intervention)
 
         # Calculate log odds ratios
- lors = []
+        lors = []
         vars = []
         for i in range(k):
             if n_intervention[i] > 0 and n_control[i] > 0:

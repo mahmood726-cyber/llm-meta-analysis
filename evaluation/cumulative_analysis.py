@@ -70,7 +70,7 @@ class ScanStatisticResult:
 class TrialSequentialBoundary:
     """Trial sequential analysis boundaries"""
     n_studies: int
-        boundary_upper: float
+    boundary_upper: float
     boundary_lower: float
     information_size: float
     alpha: float

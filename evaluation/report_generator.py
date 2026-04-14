@@ -61,7 +61,7 @@ class MetaAnalysisResults:
     sensitivity_analyses: List[Dict]
     publication_bias_tests: Dict
     quality_assessment: Dict
-   GRADE_assessment: Dict
+    GRADE_assessment: Dict
 
 
 @dataclass

@@ -14,9 +14,9 @@ from models.claude import Claude, ClaudeOpus, ClaudeSonnet, ClaudeHaiku
 from models.gemini import Gemini, GeminiPro, GeminiFlash
 from models.llama3 import Llama3, Llama38B, Llama370B
 
-from input_chunker import InputChunker
+from .input_chunker import InputChunker
 
-from utils import (
+from .utils import (
     format_example_with_prompt_template, 
     load_json_file,
     get_md_content_by_pmcid,
@@ -27,7 +27,7 @@ from utils import (
 )
 from typing import Dict, List, Optional, Tuple
 from tqdm import tqdm
-from templates import DatasetTemplates
+from .templates import DatasetTemplates
 import random
 
 DATA_FOLDER_PATH = os.path.join(os.path.dirname(__file__), "data")

@@ -18,10 +18,10 @@ from pydantic import BaseModel, Field
 from uvicorn import run
 
 # Import local modules
-from run_task import MetaAnalysisTaskRunner, run_end_to_end_task
-from evaluate_output import MetaAnalysisTaskEvaluator
-from error_analyzer import ErrorAnalyzer
-from visualizer import ResultsVisualizer, load_metrics_from_files
+from .run_task import MetaAnalysisTaskRunner, run_end_to_end_task
+from .evaluate_output import MetaAnalysisTaskEvaluator
+from .error_analyzer import ErrorAnalyzer
+from .visualizer import ResultsVisualizer, load_metrics_from_files
 
 
 # Pydantic models for request/response

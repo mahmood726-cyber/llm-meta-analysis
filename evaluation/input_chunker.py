@@ -1,4 +1,4 @@
-from models.model import Model
+from .models.model import Model
 from typing import List
 from numerizer import numerize
 from nltk.tokenize import sent_tokenize

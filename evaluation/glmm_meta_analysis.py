@@ -21,6 +21,8 @@ from typing import Dict, List, Tuple, Optional, Union
 from dataclasses import dataclass
 import warnings
 
+from .statistical_framework import UncertaintyInterval
+
 
 @dataclass
 class BinaryData:

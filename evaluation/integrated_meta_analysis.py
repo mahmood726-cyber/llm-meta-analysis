@@ -16,34 +16,34 @@ import json
 import warnings
 
 # Import all modules
-from statistical_framework import (
+from .statistical_framework import (
     EnhancedHeterogeneity, PublicationBiasAssessment, SmallStudyEffects
 )
-from bayesian_meta_analysis import BayesianMetaAnalyzer
-from network_meta_analysis import NetworkMetaAnalyzer
-from power_analysis import PowerAnalysis, SampleSizeCalculator
-from multivariate_meta_analysis import MultivariateMetaAnalyzer, StudyMultivariateData
-from ipd_meta_analysis import IPDMetaAnalyzer
-from meta_regression import MetaRegressionAnalyzer, InfluenceAnalysis
-from cumulative_analysis import (
+from .bayesian_meta_analysis import BayesianMetaAnalyzer
+from .network_meta_analysis import NetworkMetaAnalyzer
+from .power_analysis import PowerAnalysis, SampleSizeCalculator
+from .multivariate_meta_analysis import MultivariateMetaAnalyzer, StudyMultivariateData
+from .ipd_meta_analysis import IPDMetaAnalyzer
+from .meta_regression import MetaRegressionAnalyzer, InfluenceAnalysis
+from .cumulative_analysis import (
     CumulativeMetaAnalyzer, ScanStatisticsAnalyzer, TrialSequentialAnalyzer
 )
-from sensitivity_analysis import (
+from .sensitivity_analysis import (
     SensitivityAnalyzer, OutlierDetector, ModelComparisonAnalyzer
 )
-from ml_quality_assessment import (
+from .ml_quality_assessment import (
     RuleBasedQualityAssessor, MLQualityAssessor, IntegratedQualityAssessor
 )
-from clinical_decision_support import (
+from .clinical_decision_support import (
     ClinicalDecisionSupportEngine, PersonalizedDecisionSupport
 )
-from report_generator import (
+from .report_generator import (
     PRISMAReportGenerator, StudyData, MetaAnalysisResults
 )
-from cross_validation import (
+from .cross_validation import (
     MetaAnalysisCrossValidator, MetaAnalysisModelSelector, EnsembleMetaAnalyzer
 )
-from federated_learning import (
+from .federated_learning import (
     FederatedMetaAnalyzer, PrivacyPreservingMetaAnalysis, InstitutionData
 )
 

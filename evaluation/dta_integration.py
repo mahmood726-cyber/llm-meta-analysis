@@ -216,7 +216,6 @@ class DTAProIntegrator:
         :return: Tuple of (sensitivity, 1-specificity, sample_size)
         """
         sensitivities = []
-            'false_positives', 'false_negatives', 'true_negatives']]
         one_minus_specificities = []
         sample_sizes = []
 

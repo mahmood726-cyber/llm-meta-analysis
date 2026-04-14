@@ -44,8 +44,8 @@ class HeterogeneityStatistics:
     q_df: int
     q_p_value: float
     i_squared: float
-    i_squared_ci: Optional[UncertaintyInterval] = None
     tau_squared: float
+    i_squared_ci: Optional[UncertaintyInterval] = None
     tau_squared_ci: Optional[UncertaintyInterval] = None
     tau: Optional[float] = None
 

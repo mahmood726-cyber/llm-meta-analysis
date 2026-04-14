@@ -1,4 +1,4 @@
-from templates import Template
+from .templates import Template
 from typing import Dict, List, Optional, Any, Tuple
 import os
 import json

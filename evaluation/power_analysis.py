@@ -44,6 +44,11 @@ class MetaAnalysisPowerCalculator:
     """
     Power analysis for meta-analysis.
 
+    Backward-compatible aliases (referenced by
+    evaluation/integrated_meta_analysis.py): PowerAnalysis and
+    SampleSizeCalculator. Both point at this class; splitting them is
+    future work if the APIs need to diverge.
+
     References:
     - Jackson et al. (2018) Power and sample size for meta-analysis
     - Hedges & Pigott (2001) The power of statistical tests in meta-analysis
@@ -482,3 +487,10 @@ if __name__ == "__main__":
     print("  - Optimal information size")
     print("  - Sample size for new studies")
     print("  - Power of publication bias tests")
+
+
+# ── Backward-compat aliases for integrated_meta_analysis.py ────────
+# These are maintained by the Overmind smoke-repair pass (2026-04-14).
+# If the API needs to diverge, split them into real classes.
+PowerAnalysis = MetaAnalysisPowerCalculator
+SampleSizeCalculator = MetaAnalysisPowerCalculator
