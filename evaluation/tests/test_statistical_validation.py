@@ -39,30 +39,27 @@ class TestKnownValueDatasets:
     @staticmethod
     def dataset_borenstein_2009() -> Dict:
         """
-        Example from Borenstein et al. (2009) Introduction to Meta-Analysis.
-        Chapter 14: Worked examples.
+        Small worked example for fixed- and random-effects validation.
 
-        R code:
-        library(metafor)
-        yi <- c(0.30, 0.10, 0.20, -0.10, 0.40, 0.00, -0.20, 0.10)
-        vi <- c(0.03, 0.02, 0.04, 0.02, 0.05, 0.03, 0.04, 0.02)
-        res <- rma(yi, vi, method="DL")
+        Expected values below are derived from the explicit yi/vi vectors in this
+        fixture using standard inverse-variance fixed-effect and
+        DerSimonian-Laird random-effects formulas.
         """
         return {
             "effects": np.array([0.30, 0.10, 0.20, -0.10, 0.40, 0.00, -0.20, 0.10]),
             "variances": np.array([0.03, 0.02, 0.04, 0.02, 0.05, 0.03, 0.04, 0.02]),
             "names": [f"Study {i+1}" for i in range(8)],
             "expected": {
-                "fixed_effect": 0.075,
-                "fixed_ci_lower": -0.058,
-                "fixed_ci_upper": 0.208,
-                "random_effect": 0.071,
-                "random_ci_lower": -0.079,
-                "random_ci_upper": 0.221,
-                "tau2": 0.0141,
-                "i2": 22.8,
-                "q": 9.05,
-                "p": 0.247
+                "fixed_effect": 0.0802,
+                "fixed_ci_lower": -0.0565,
+                "fixed_ci_upper": 0.2170,
+                "random_effect": 0.0821,
+                "random_ci_lower": -0.0413,
+                "random_ci_upper": 0.2054,
+                "tau2": 0.00346,
+                "i2": 10.88,
+                "q": 7.8547,
+                "p": 0.3456
             }
         }
 
@@ -251,6 +248,31 @@ class TestRandomEffectsMA:
 
         assert tau2_reml is not None, "REML should converge"
         assert tau2_reml >= 0, "τ² should be non-negative"
+
+    def test_reml_converges_on_regression_seed(self):
+        """
+        Regression test for REML oscillation bug.
+
+        The original ad-hoc fixed-point update in ``_reml_estimate`` oscillated
+        on this seeded input (k=20) and returned ``None`` after 100 iterations.
+        The scipy-based profile-likelihood optimizer must converge and yield a
+        finite, non-negative τ² within a plausible range anchored to the
+        DerSimonian–Laird estimate.
+        """
+        np.random.seed(42)
+        effects = np.random.normal(0.5, 0.3, 20)
+        variances = np.random.uniform(0.01, 0.05, 20)
+
+        tau2_reml = AdvancedMetaAnalysis._reml_estimate(
+            effects, variances, max_iter=100, tolerance=1e-8
+        )
+
+        assert tau2_reml is not None, "REML must converge on k=20 seed=42 input"
+        assert np.isfinite(tau2_reml)
+        assert tau2_reml >= 0.0
+        # DL estimate on this input is ~0.0567; REML should be in the same
+        # order of magnitude (well below 1.0 given effect scale 0.3).
+        assert tau2_reml < 1.0, f"τ²={tau2_reml} outside plausible range"
 
     def test_paule_mandel_estimator(self):
         """Test Paule-Mandel estimator."""

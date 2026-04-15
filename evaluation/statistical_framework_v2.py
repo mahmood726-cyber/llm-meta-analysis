@@ -249,54 +249,85 @@ class AdvancedMetaAnalysis:
         tolerance: float = 1e-8
     ) -> Optional[float]:
         """
-        REML estimation of τ² with proper convergence checking.
+        REML estimation of τ² via bounded minimization of the profile REML
+        negative log-likelihood.
+
+        The previous implementation used an unstable ad-hoc fixed-point update
+        (`tau2 = residual_var - mean(variances * w)`) that oscillates and
+        fails to converge on routine data (see regression test with seed=42,
+        k=20). Replaced with scipy `minimize_scalar` on the REML profile
+        negative log-likelihood, which is unimodal in τ² on [0, ∞) for
+        inverse-variance weighted meta-analysis (Viechtbauer 2005). A DL
+        estimate is computed to set a sensible upper bound.
 
         :param effects: Study effects
         :param variances: Study variances
-        :param max_iter: Maximum iterations
-        :param tolerance: Convergence tolerance
-        :return: τ² estimate or None if failed
+        :param max_iter: Maximum iterations for the bounded optimizer
+        :param tolerance: Convergence tolerance on τ²
+        :return: τ² estimate or None if optimization fails
         """
         n = len(effects)
 
-        # Initialize with DL estimate
-        weights = 1 / variances
+        # Guard: REML is undefined with fewer than 2 studies.
+        if n < 2:
+            return None
+
+        # All-zero residual variance ⇒ τ² = 0 trivially.
+        if not np.all(np.isfinite(effects)) or not np.all(np.isfinite(variances)):
+            return None
+        if np.any(variances <= 0):
+            return None
+
+        # DL estimate as anchor / upper-bound scale.
+        weights = 1.0 / variances
         sum_w = np.sum(weights)
-        sum_w2 = np.sum(weights**2)
+        sum_w2 = np.sum(weights ** 2)
         weighted_mean = np.sum(weights * effects) / sum_w
-        q = np.sum(weights * (effects - weighted_mean)**2)
+        q = np.sum(weights * (effects - weighted_mean) ** 2)
         df = n - 1
-        tau2 = max(0, (q - df) / (sum_w - sum_w2 / sum_w))
+        denom = sum_w - sum_w2 / sum_w
+        tau2_dl = max(0.0, (q - df) / denom) if denom > 0 else 0.0
 
-        # Iterative REML
-        for iteration in range(max_iter):
-            tau2_old = tau2
+        # Upper bound: 100× DL, at least the sample variance of the effects,
+        # capped well below any pathological regime.
+        sample_var = float(np.var(effects, ddof=1)) if n > 1 else 0.0
+        upper = max(10.0 * max(tau2_dl, sample_var, 1.0), 1e3)
 
-            # Update weights with current τ²
-            w_re = 1 / (variances + tau2)
-            sum_w_re = np.sum(w_re)
-            weighted_mean_re = np.sum(w_re * effects) / sum_w_re
+        def neg_reml_ll(tau2: float) -> float:
+            if tau2 < 0 or not np.isfinite(tau2):
+                return 1e20
+            v_plus = variances + tau2
+            if np.any(v_plus <= 0):
+                return 1e20
+            w = 1.0 / v_plus
+            sw = np.sum(w)
+            if sw <= 0 or not np.isfinite(sw):
+                return 1e20
+            mu = np.sum(w * effects) / sw
+            # REML profile negative log-likelihood (up to additive constants):
+            #   0.5 * [ Σ log(v_i + τ²) + log(Σ w_i) + Σ w_i (y_i - μ)² ]
+            return 0.5 * (
+                float(np.sum(np.log(v_plus)))
+                + float(np.log(sw))
+                + float(np.sum(w * (effects - mu) ** 2))
+            )
 
-            # Score function derivative
-            sum_w_re2 = np.sum(w_re**2)
-            residual_var = np.sum(w_re * (effects - weighted_mean_re)**2) / n
+        try:
+            result = minimize_scalar(
+                neg_reml_ll,
+                bounds=(0.0, upper),
+                method="bounded",
+                options={"xatol": tolerance, "maxiter": max_iter},
+            )
+        except Exception:
+            return None
 
-            # REML update
-            tau2 = residual_var - (1/n) * np.sum(variances * w_re)
-
-            # Check for convergence
-            if abs(tau2 - tau2_old) < tolerance:
-                # Validate result
-                if tau2 < -tolerance:
-                    return None  # Negative variance - failed
-                return max(0, tau2)
-
-            # Check for divergence
-            if not np.isfinite(tau2) or tau2 > 1e6:
-                return None
-
-        # Failed to converge
-        return None
+        if not getattr(result, "success", False):
+            return None
+        tau2 = float(result.x)
+        if not np.isfinite(tau2) or tau2 < -tolerance:
+            return None
+        return max(0.0, tau2)
 
     @staticmethod
     def _paule_mandel_estimate(
