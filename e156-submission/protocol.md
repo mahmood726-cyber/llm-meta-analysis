@@ -4,14 +4,14 @@ author@example.com
 
 Protocol: LLM-Driven Meta-Analysis: Automated Extraction and Synthesis from Clinical Trials
 
-This protocol describes the planned evidence synthesis for LLM-Driven Meta-Analysis: Automated Extraction and Synthesis from Clinical, targeting transparent, reproducible estimation of Pooled effect size in a versioned analytical workflow. Eligible studies include Cochrane systematic reviews and randomised trials reporting the primary outcome, with no restrictions on publication year, language, geography, or sample size. Searches will cover the Cochrane Library, PubMed, and Embase using structured search terms, reference-list screening, and duplicate full-text review before extraction. The primary analysis will estimate comparative Pooled effect size using frequentist network meta-analysis, reporting 95 percent confidence intervals with prespecified model checks. Heterogeneity will be summarised using I-squared and tau-squared, with sensitivity analyses across variance estimators, exclusion scenarios, and leave-one-out patterns. Analysis code will be versioned and archived at https://github.com/hyesunyun/llm-meta-analysis, and reporting will follow PRISMA 2020 guidance to support independent verification and reuse. Anticipated limitations include publication bias, clinical heterogeneity, sparse data in some settings, and the constraints of aggregate-level evidence synthesis.
+This protocol describes the planned evidence synthesis for LLM-Driven Meta-Analysis: Automated Extraction and Synthesis from Clinical, targeting transparent, reproducible estimation of Pooled effect size in a versioned analytical workflow. Eligible studies include Cochrane systematic reviews and randomised trials reporting the primary outcome, with no restrictions on publication year, language, geography, or sample size. Searches will cover the Cochrane Library, PubMed, and Embase using structured search terms, reference-list screening, and duplicate full-text review before extraction. The primary analysis will estimate comparative Pooled effect size using frequentist network meta-analysis, reporting 95 percent confidence intervals with prespecified model checks. Heterogeneity will be summarised using I-squared and tau-squared, with sensitivity analyses across variance estimators, exclusion scenarios, and leave-one-out patterns. Analysis code will be versioned and archived at https://github.com/mahmood726-cyber/llm-meta-analysis, and reporting will follow PRISMA 2020 guidance to support independent verification and reuse. Anticipated limitations include publication bias, clinical heterogeneity, sparse data in some settings, and the constraints of aggregate-level evidence synthesis.
 
 Outside Notes
 
 Type: protocol
 Primary estimand: Pooled effect size
 App: LLM Meta-Analysis Framework v2.0
-Code: https://github.com/hyesunyun/llm-meta-analysis
+Code: https://github.com/mahmood726-cyber/llm-meta-analysis
 Date: 2026-03-26
 Validation: DRAFT
 
