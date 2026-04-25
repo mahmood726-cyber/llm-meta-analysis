@@ -1,7 +1,11 @@
 from .model import Model
-import google.generativeai as genai
 import time
 import os
+
+# Lazy import: google.generativeai pulls a 12s import-tree (gRPC + protobuf
+# + auth) which Overmind's smoke importer flagged as a 300s cumulative
+# timeout across all eval/models. Deferring to instance __init__ keeps
+# the module import-light (lessons.md heavy-ML-imports rule, 2026-04-25).
 
 REQ_TIME_GAP = 5
 MAX_API_RETRY = 3
@@ -13,6 +17,8 @@ class Gemini(Model):
     """
     def __init__(self, model_version: str = "gemini-1.5-pro") -> None:
         super().__init__()
+        import google.generativeai as genai  # lazy: see module docstring
+        self._genai = genai
         self.model_version = model_version
         # Configure the API - expects GOOGLE_API_KEY environment variable
         api_key = os.environ.get("GOOGLE_API_KEY")
@@ -49,7 +55,7 @@ class Gemini(Model):
         :param temperature: temperature parameter for the model
         :return: output of the model
         """
-        generation_config = genai.types.GenerationConfig(
+        generation_config = self._genai.types.GenerationConfig(
             max_output_tokens=max_new_tokens,
             temperature=temperature,
         )
