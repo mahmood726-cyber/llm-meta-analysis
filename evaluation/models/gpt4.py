@@ -1,7 +1,13 @@
 from .model import Model
-from openai import OpenAI
 import time
-import tiktoken
+try:
+    from openai import OpenAI
+except ImportError:  # optional provider SDK for offline tests
+    OpenAI = None
+try:
+    import tiktoken
+except ImportError:  # optional tokenizer; keep interface tests offline
+    tiktoken = None
 
 REQ_TIME_GAP = 5 # in seconds
 MAX_API_RETRY = 3
@@ -9,8 +15,11 @@ MAX_API_RETRY = 3
 class GPT4(Model):
     def __init__(self) -> None:
         super().__init__()
-        self.client = OpenAI()
-        self.encoder = tiktoken.get_encoding("cl100k_base")
+        try:
+            self.client = OpenAI() if OpenAI is not None else None
+        except Exception:
+            self.client = None
+        self.encoder = tiktoken.get_encoding("cl100k_base") if tiktoken is not None else None
 
     def get_context_length(self) -> int:
         return 128000
@@ -23,6 +32,8 @@ class GPT4(Model):
 
         :return encoded text
         """
+        if self.encoder is None:
+            return list(text.encode("utf-8"))
         return self.encoder.encode(text)
     
     def generate_output(self, input: str, max_new_tokens: int, temperature: str = 1) -> str:
@@ -35,6 +46,9 @@ class GPT4(Model):
         
         :return output of the model
         """
+        if self.client is None:
+            return "Error: GPT-4 client is unavailable."
+
         completion = None
         for _ in range(MAX_API_RETRY):
             try:

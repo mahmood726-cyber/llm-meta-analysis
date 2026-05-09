@@ -395,14 +395,13 @@ class AdvancedMetaAnalysis:
         # Random-effects weights
         weights_re = 1 / (variances + tau2)
         sum_w_re = np.sum(weights_re)
-        weights_re_re = weights_re / sum_w_re
 
-        # Residual variance estimate
-        residual_sum_sq = np.sum(weights_re_re * (effects - pooled_effect)**2)
+        # Modified Knapp-Hartung safeguard: never return a CI narrower than
+        # the naive inverse-variance interval for small-k settings.
+        residual_q = np.sum(weights_re * (effects - pooled_effect) ** 2)
         t_df = n - 1
-
-        # HKSJ standard error
-        se_hksj = np.sqrt(residual_sum_sq / sum_w_re)
+        scale = max(1.0, residual_q / max(t_df, 1))
+        se_hksj = np.sqrt(scale / sum_w_re)
 
         # t-distribution critical value
         t_crit = stats.t.ppf(1 - alpha/2, df=t_df)
@@ -956,16 +955,17 @@ class MetaRegression:
         :param alpha: Significance level
         :return: Dictionary with regression results
         """
-        n_studies = len(effects)
-        n_covariates = covariates.shape[1] if covariates.ndim > 1 else 1
-
         # Ensure covariates is 2D
         if covariates.ndim == 1:
             covariates = covariates.reshape(-1, 1)
 
+        n_studies = len(effects)
+        n_covariates = covariates.shape[1]
+        n_parameters = n_covariates + 1
+
         # Initial estimate: weighted least squares (fixed effects)
         weights_iv = 1 / variances
-        X = covariates
+        X = np.column_stack([np.ones(n_studies), covariates])
         y = effects
 
         # WLS: beta = (X'W X)^(-1) X'W y
@@ -983,8 +983,12 @@ class MetaRegression:
         q_statistic = np.sum(weights_iv * residuals**2)
 
         # Estimate tau² (method of moments from residuals)
-        df = n_studies - n_covariates
-        tau2_mm = max(0, (q_statistic - df) / (n_studies - np.trace(X @ np.linalg.solve(XtWX, X.T) @ W)))
+        df = n_studies - n_parameters
+        projection = X @ np.linalg.solve(XtWX, X.T) @ W
+        tau2_denominator = np.sum(weights_iv) - np.trace(W @ projection)
+        if tau2_denominator <= 0:
+            tau2_denominator = np.sum(weights_iv)
+        tau2_mm = max(0, (q_statistic - df) / tau2_denominator)
 
         # Iterative REML for random effects meta-regression
         if method == "REML":
@@ -1047,7 +1051,7 @@ class MetaRegression:
         r2_heterogeneity = max(0, 1 - q_residual / q_total) if q_total > 0 else 0
 
         # Adjusted R² (accounting for number of covariates)
-        r2_adj = max(0, 1 - (q_residual / (n_studies - n_covariates)) / (q_total / (n_studies - 1)))
+        r2_adj = max(0, 1 - (q_residual / max(n_studies - n_parameters, 1)) / (q_total / max(n_studies - 1, 1)))
 
         return {
             "coefficients": beta,
@@ -1061,7 +1065,7 @@ class MetaRegression:
             "r_squared_adj": r2_adj,
             "q_total": q_total,
             "q_residual": q_residual,
-            "covariate_names": [f"X{i+1}" for i in range(n_covariates)]
+            "covariate_names": ["Intercept"] + [f"X{i+1}" for i in range(n_covariates)]
         }
 
 
@@ -1137,7 +1141,7 @@ class PublicationBiasTests:
             "slope": beta[1],
             "t_statistic": t_stat,
             "p_value": p_value,
-            "significant": p_value < alpha,
+            "significant": bool(p_value < alpha),
             "interpretation": "Evidence of publication bias" if p_value < alpha else "No evidence of publication bias"
         }
 

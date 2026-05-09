@@ -1,6 +1,9 @@
 from .model import Model
-from anthropic import Anthropic
 import time
+try:
+    from anthropic import Anthropic
+except ImportError:  # optional provider SDK for offline tests
+    Anthropic = None
 
 REQ_TIME_GAP = 5
 MAX_API_RETRY = 3
@@ -13,7 +16,10 @@ class Claude(Model):
     def __init__(self, model_version: str = "claude-3-5-sonnet-20241022") -> None:
         super().__init__()
         self.model_version = model_version
-        self.client = Anthropic()
+        try:
+            self.client = Anthropic() if Anthropic is not None else None
+        except Exception:
+            self.client = None
         self.context_lengths = {
             "claude-3-5-sonnet-20241022": 200000,
             "claude-3-5-sonnet-20240620": 200000,
@@ -46,6 +52,9 @@ class Claude(Model):
         :param temperature: temperature parameter for the model
         :return: output of the model
         """
+        if self.client is None:
+            return "Error: Claude client is unavailable."
+
         completion = None
         for attempt in range(MAX_API_RETRY):
             try:

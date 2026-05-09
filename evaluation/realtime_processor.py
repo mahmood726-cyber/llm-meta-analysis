@@ -17,9 +17,14 @@ from pathlib import Path
 import queue
 import threading
 
-from .models.model import Model
-from .utils import load_json_file, save_json_file, format_example_with_prompt_template
-from .templates import DatasetTemplates
+try:
+    from .models.model import Model
+    from .utils import load_json_file, save_json_file, format_example_with_prompt_template
+    from .templates import DatasetTemplates
+except ImportError:  # pragma: no cover - supports flat-module test imports
+    from models.model import Model
+    from utils import load_json_file, save_json_file, format_example_with_prompt_template
+    from templates import DatasetTemplates
 
 
 @dataclass

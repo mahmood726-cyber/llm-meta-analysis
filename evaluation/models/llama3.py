@@ -1,6 +1,15 @@
 from .model import Model
-from transformers import AutoModelForCausalLM, AutoTokenizer
-import torch
+
+try:
+    from transformers import AutoModelForCausalLM, AutoTokenizer
+except ImportError:
+    AutoModelForCausalLM = None
+    AutoTokenizer = None
+
+try:
+    import torch
+except ImportError:
+    torch = None
 
 class Llama3(Model):
     """
@@ -9,6 +18,8 @@ class Llama3(Model):
     """
     def __init__(self, model_size: str = "8B") -> None:
         super().__init__()
+        if torch is None or AutoModelForCausalLM is None or AutoTokenizer is None:
+            raise ImportError("Llama 3 requires optional dependencies: transformers and torch")
         self.model_size = model_size
         self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
         self.model_name = f"meta-llama/Meta-Llama-3-{model_size}-Instruct"

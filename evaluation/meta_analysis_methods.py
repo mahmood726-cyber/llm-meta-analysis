@@ -8,16 +8,30 @@ forest plots.
 
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
-import seaborn as sns
 from typing import List, Dict, Tuple, Optional, Literal
 from dataclasses import dataclass
 from scipy import stats
-from statsmodels.stats.meta_analysis import (
-    effectsize_smd,
-    effectsize_2proportions,
-    combine_effects
-)
+
+try:
+    import matplotlib.pyplot as plt
+except ImportError:
+    plt = None
+
+try:
+    import seaborn as sns
+except ImportError:
+    sns = None
+
+try:
+    from statsmodels.stats.meta_analysis import (
+        effectsize_smd,
+        effectsize_2proportions,
+        combine_effects,
+    )
+except ImportError:
+    effectsize_smd = None
+    effectsize_2proportions = None
+    combine_effects = None
 
 
 @dataclass
@@ -189,17 +203,39 @@ class MetaAnalyzer:
         variances = []
 
         for study in self.studies:
-            # Using statsmodels effectsize_2proportions
-            eff, var_eff = effectsize_2proportions(
-                np.array([study.intervention_events]),
-                np.array([study.intervention_total]),
-                np.array([study.comparator_events]),
-                np.array([study.comparator_total]),
-                statistic='odds-ratio',
-                zero_correction=0.5  # Haldane-Anscombe correction
-            )
-            effects.append(eff[0])
-            variances.append(var_eff[0])
+            if effectsize_2proportions is not None:
+                eff, var_eff = effectsize_2proportions(
+                    np.array([study.intervention_events]),
+                    np.array([study.intervention_total]),
+                    np.array([study.comparator_events]),
+                    np.array([study.comparator_total]),
+                    statistic='odds-ratio',
+                    zero_correction=0.5  # Haldane-Anscombe correction
+                )
+                effects.append(eff[0])
+                variances.append(var_eff[0])
+            else:
+                intervention_nonevents = study.intervention_total - study.intervention_events
+                comparator_nonevents = study.comparator_total - study.comparator_events
+                cells = np.array(
+                    [
+                        study.intervention_events,
+                        intervention_nonevents,
+                        study.comparator_events,
+                        comparator_nonevents,
+                    ],
+                    dtype=float,
+                )
+                if np.any(cells == 0):
+                    cells += 0.5
+                intervention_events, intervention_nonevents, comparator_events, comparator_nonevents = cells
+                effects.append(np.log((intervention_events * comparator_nonevents) / (intervention_nonevents * comparator_events)))
+                variances.append(
+                    1 / intervention_events
+                    + 1 / intervention_nonevents
+                    + 1 / comparator_events
+                    + 1 / comparator_nonevents
+                )
 
         return np.array(effects), np.array(variances)
 
@@ -213,17 +249,36 @@ class MetaAnalyzer:
         variances = []
 
         for study in self.studies:
-            # Using statsmodels effectsize_smd (Hedges' g with bias correction)
-            eff, var_eff = effectsize_smd(
-                np.array([study.intervention_mean]),
-                np.array([study.intervention_sd]),
-                np.array([study.intervention_n]),
-                np.array([study.comparator_mean]),
-                np.array([study.comparator_sd]),
-                np.array([study.comparator_n])
-            )
-            effects.append(eff[0])
-            variances.append(var_eff[0])
+            if effectsize_smd is not None:
+                eff, var_eff = effectsize_smd(
+                    np.array([study.intervention_mean]),
+                    np.array([study.intervention_sd]),
+                    np.array([study.intervention_n]),
+                    np.array([study.comparator_mean]),
+                    np.array([study.comparator_sd]),
+                    np.array([study.comparator_n])
+                )
+                effects.append(eff[0])
+                variances.append(var_eff[0])
+            else:
+                df = study.intervention_n + study.comparator_n - 2
+                pooled_variance = (
+                    ((study.intervention_n - 1) * study.intervention_sd ** 2)
+                    + ((study.comparator_n - 1) * study.comparator_sd ** 2)
+                ) / df
+                pooled_sd = np.sqrt(pooled_variance)
+                if pooled_sd == 0:
+                    effects.append(np.nan)
+                    variances.append(np.nan)
+                    continue
+                cohen_d = (study.intervention_mean - study.comparator_mean) / pooled_sd
+                hedges_correction = 1 - (3 / ((4 * df) - 1))
+                smd = hedges_correction * cohen_d
+                variance = ((study.intervention_n + study.comparator_n) / (study.intervention_n * study.comparator_n)) + (
+                    smd ** 2 / (2 * df)
+                )
+                effects.append(smd)
+                variances.append(variance)
 
         return np.array(effects), np.array(variances)
 
@@ -258,6 +313,8 @@ class MetaAnalyzer:
 
         # Perform meta-analysis using statsmodels
         try:
+            if combine_effects is None:
+                raise ImportError("statsmodels is not installed")
             result = combine_effects(effects, variances, method=method)
 
             # Calculate heterogeneity statistics
@@ -346,7 +403,7 @@ class MetaAnalyzer:
             n_studies=len(effects)
         )
 
-    def forest_plot(self, output_path: Optional[str] = None, outcome_type: str = 'binary') -> plt.Figure:
+    def forest_plot(self, output_path: Optional[str] = None, outcome_type: str = 'binary') -> object:
         """
         Generate a forest plot for the meta-analysis.
 
@@ -354,6 +411,8 @@ class MetaAnalyzer:
         :param outcome_type: Type of outcome for effect size labeling
         :return: Matplotlib figure
         """
+        if plt is None:
+            raise ImportError("forest_plot requires matplotlib")
         if self.results is None:
             raise ValueError("Run analyze() before generating forest plot")
 

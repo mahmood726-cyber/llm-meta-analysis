@@ -1,6 +1,28 @@
 from typing import Dict, Tuple, List
-from sklearn.metrics import f1_score
 import numpy as np
+
+try:
+    from sklearn.metrics import f1_score as sklearn_f1_score
+except ImportError:
+    sklearn_f1_score = None
+
+
+def _f1_score(actual: List[int], predicted: List[int]) -> List[float]:
+    if sklearn_f1_score is not None:
+        return sklearn_f1_score(actual, predicted, average=None).tolist()
+
+    scores = []
+    for label in sorted(set(actual) | set(predicted)):
+        true_positives = sum(1 for a, p in zip(actual, predicted) if a == label and p == label)
+        false_positives = sum(1 for a, p in zip(actual, predicted) if a != label and p == label)
+        false_negatives = sum(1 for a, p in zip(actual, predicted) if a == label and p != label)
+        precision = true_positives / (true_positives + false_positives) if true_positives + false_positives else 0.0
+        recall = true_positives / (true_positives + false_negatives) if true_positives + false_negatives else 0.0
+        if precision + recall == 0:
+            scores.append(0.0)
+        else:
+            scores.append(2 * precision * recall / (precision + recall))
+    return scores
 
 class MetricsCalculator:
     def __init__(self, task: str) -> None:
@@ -59,7 +81,7 @@ class MetricsCalculator:
         actual = [string_to_int_labels[a] for a in actual]
         predicted = [string_to_int_labels[p] for p in predicted]
         
-        f1_scores = f1_score(actual, predicted, average=None).tolist()
+        f1_scores = _f1_score(actual, predicted)
 
         metrics[relevant_reference_field] = {
             "f1_score_binary": f1_scores[0],

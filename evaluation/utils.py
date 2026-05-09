@@ -1,4 +1,7 @@
-from .templates import Template
+try:
+    from .templates import Template
+except ImportError:  # pragma: no cover - supports flat-module test imports
+    from templates import Template
 from typing import Dict, List, Optional, Any, Tuple
 import os
 import json
@@ -6,10 +9,6 @@ import csv
 import re
 from statistics import mode
 from collections import Counter
-from statsmodels.stats.meta_analysis import (
-    effectsize_smd,
-    effectsize_2proportions
-)
 import numpy as np
 
 def format_example_with_prompt_template(example: Dict, prompt_template: Template) -> Dict:
@@ -181,7 +180,7 @@ def clean_yaml_output(output: str) -> str:
     cleaned_output = output.lower()
     cleaned_output = cleaned_output.replace("```", "").replace("yaml", "").replace("\t", "")
     cleaned_output = cleaned_output.replace("-x\n", "x\n").replace("-\n", "x\n")  # some post processing
-    cleaned_output = cleaned_output.replace("NUMBER", "x").replace("N\A", "x")
+    cleaned_output = cleaned_output.replace("number", "x").replace(r"n\a", "x")
     cleaned_output = cleaned_output.replace("\n\ncomparator", "\ncomparator")
     cleaned_output = cleaned_output.replace("*", "")
 
@@ -384,6 +383,51 @@ def convert_string_to_float(value: str) -> float:
     except:
         return None
 
+
+def _fallback_log_odds_ratio(intervention_events: int, control_events: int, intervention_total: int,
+                             control_total: int) -> Tuple[float, float]:
+    intervention_nonevents = intervention_total - intervention_events
+    control_nonevents = control_total - control_events
+    cells = np.array(
+        [intervention_events, intervention_nonevents, control_events, control_nonevents],
+        dtype=float,
+    )
+    if np.any(cells == 0):
+        cells += 0.5
+    intervention_events, intervention_nonevents, control_events, control_nonevents = cells
+    lor = np.log((intervention_events * control_nonevents) / (intervention_nonevents * control_events))
+    variance = (
+        1 / intervention_events
+        + 1 / intervention_nonevents
+        + 1 / control_events
+        + 1 / control_nonevents
+    )
+    return (float(lor), float(variance))
+
+
+def _fallback_standardized_mean_difference(intervention_mean: float, control_mean: float,
+                                           intervention_sd: float, control_sd: float,
+                                           intervention_group_size: float,
+                                           control_group_size: float) -> Tuple[float, float]:
+    n_intervention = float(intervention_group_size)
+    n_control = float(control_group_size)
+    degrees_freedom = n_intervention + n_control - 2
+    pooled_variance = (
+        ((n_intervention - 1) * intervention_sd ** 2)
+        + ((n_control - 1) * control_sd ** 2)
+    ) / degrees_freedom
+    pooled_sd = np.sqrt(pooled_variance)
+    if pooled_sd == 0:
+        raise ValueError("pooled standard deviation is zero")
+    cohen_d = (intervention_mean - control_mean) / pooled_sd
+    hedges_correction = 1 - (3 / ((4 * degrees_freedom) - 1))
+    smd = hedges_correction * cohen_d
+    variance = ((n_intervention + n_control) / (n_intervention * n_control)) + (
+        smd ** 2 / (2 * degrees_freedom)
+    )
+    return (float(smd), float(variance))
+
+
 def calculate_log_odds_ratio(intervention_events: int, control_events: int, intervention_total: int,
                              control_total: int) -> Tuple[float, float]:
     """
@@ -416,7 +460,9 @@ def calculate_log_odds_ratio(intervention_events: int, control_events: int, inte
     if (intervention_events > intervention_total) or (control_events > control_total):
         return (None, None)
     
-    try:    
+    try:
+        from statsmodels.stats.meta_analysis import effectsize_2proportions
+
         # Haldane-Anscombe correction (algorithm used by Review Manager - RevMan software for meta-analysis) This
         # involves adding 0.5 to each cell value if any of the cells in the contingency table contain a zero Except when
         # intervention_events and control_events = 0 or intervention_nonevents and control_nonevents = 0, OR is undefined.
@@ -426,6 +472,13 @@ def calculate_log_odds_ratio(intervention_events: int, control_events: int, inte
                                             np.array([control_total]),
                                             statistic='odds-ratio', zero_correction=0.5)
         return (lor[0], var_eff[0])
+    except ImportError:
+        return _fallback_log_odds_ratio(
+            intervention_events,
+            control_events,
+            intervention_total,
+            control_total,
+        )
     except:
         print(
             f"An exception occurred for calculate log odds ratio - intervention_events: {intervention_events}, "
@@ -468,7 +521,9 @@ def calculate_standardized_mean_difference(intervention_mean: float, control_mea
     if None in (intervention_mean, control_mean, intervention_sd, control_sd, intervention_group_size, control_group_size):
         return (None, None)
 
-    try: 
+    try:
+        from statsmodels.stats.meta_analysis import effectsize_smd
+
         smd, var_eff = effectsize_smd(np.array([intervention_mean]), 
                                       np.array([intervention_sd]),
                                       np.array([intervention_group_size]),
@@ -476,6 +531,15 @@ def calculate_standardized_mean_difference(intervention_mean: float, control_mea
                                       np.array([control_sd]),  
                                       np.array([control_group_size]))
         return (smd[0], var_eff[0])
+    except ImportError:
+        return _fallback_standardized_mean_difference(
+            intervention_mean,
+            control_mean,
+            intervention_sd,
+            control_sd,
+            intervention_group_size,
+            control_group_size,
+        )
     except:
         print(
             f"An exception occurred for calculate standardized mean difference - intervention_mean: {intervention_mean}, control_mean: {control_mean}, intervention_sd: {intervention_sd}, control_sd: {control_sd}, intervention_group_size: {intervention_group_size}, control_group_size: {control_group_size}")

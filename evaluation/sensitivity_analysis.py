@@ -111,8 +111,8 @@ class SubgroupAnalysis:
             )
 
             all_effects.append(result_g.pooled_effect)
-            # Use inverse variance weights for between-subgroup test
-            all_weights.append(1 / result_g.ci.width()**2)
+            subgroup_weight = np.sum(1 / (variances_g + result_g.tau_squared))
+            all_weights.append(subgroup_weight)
 
         all_effects = np.array(all_effects)
         all_weights = np.array(all_weights)
