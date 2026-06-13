@@ -3,7 +3,6 @@
 
 import os
 import uuid
-import pkg_resources
 import yaml
 from jinja2 import BaseLoader, Environment
 import logging
@@ -14,8 +13,10 @@ env = Environment(loader=BaseLoader)
 # Allow the python function zip()
 env.globals.update(zip=zip)
 
-# Local path to the folder containing the templates
-TEMPLATES_FOLDER_PATH = pkg_resources.resource_filename(__name__, "templates")
+# Local path to the folder containing the templates.
+# Resolve relative to this module's directory so the package works without
+# setuptools/pkg_resources (which is deprecated and absent in some envs).
+TEMPLATES_FOLDER_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "templates")
 
 class Template(yaml.YAMLObject):
     """

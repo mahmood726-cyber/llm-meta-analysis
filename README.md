@@ -30,7 +30,7 @@ All critical methodological concerns have been resolved.
 
 ### Validation & Testing
 
-- **Unit tests** - 7/7 tests passing with known value validation
+- **Unit tests** - test suite passing (`pytest`), including known-value validation
 - **BCG dataset validation** - Verified against published results
 - **Edge case handling** - Comprehensive validation of boundary conditions
 - **No simulated data** - Removed all placeholder data from primary analysis
