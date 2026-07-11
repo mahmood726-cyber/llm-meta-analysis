@@ -226,6 +226,27 @@ class TestMetricsCalculator:
         assert "outcome_type_f_score" in metrics
         assert metrics["exact_match_accuracy"]["total"] == 0.75
 
+    def test_percentage_computable_all_references_none(self):
+        """Regression (F5): a batch where every reference field is None must not
+        raise ZeroDivisionError; it should report 0.0 computable instances."""
+        from calculate_metrics import MetricsCalculator
+
+        calc = MetricsCalculator("binary_outcomes")
+        data = [
+            {"log_odds_ratio_output": 1.0, "log_odds_ratio": None},
+            {"log_odds_ratio_output": None, "log_odds_ratio": None},
+        ]
+        result = calc._MetricsCalculator__calculate_percentage_of_computable_instances(data)
+        assert result == 0.0
+
+    def test_percentage_computable_empty_data(self):
+        """Regression (F5): an empty batch must not raise IndexError."""
+        from calculate_metrics import MetricsCalculator
+
+        calc = MetricsCalculator("binary_outcomes")
+        result = calc._MetricsCalculator__calculate_percentage_of_computable_instances([])
+        assert result == 0.0
+
 
 class TestErrorAnalyzer:
     """Tests for the ErrorAnalyzer class"""

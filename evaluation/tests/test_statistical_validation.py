@@ -386,6 +386,41 @@ class TestConfidenceIntervals:
         assert pred_int.width() > result.ci.width(), \
             "Prediction interval should be wider than CI"
 
+    def test_prediction_interval_low_heterogeneity(self):
+        """Regression (F1): near-homogeneous data (tau^2 ~ 0) must not collapse
+        the PI below the CI. The PI SE must include the sampling variance of the
+        pooled mean (SE_mu^2), not just a tau^2-uncertainty term."""
+        effects = np.array([0.20, 0.22, 0.19, 0.21, 0.20, 0.23])
+        variances = np.array([0.01, 0.012, 0.011, 0.009, 0.010, 0.013])
+
+        result = AdvancedMetaAnalysis.random_effects_analysis(
+            effects, variances, prediction=True
+        )
+
+        pred_int = result.prediction_interval
+        assert pred_int is not None, "Prediction interval should be computed"
+        assert result.heterogeneity.tau_squared < 1e-3, \
+            "This fixture is intentionally near-homogeneous"
+        assert pred_int.width() >= result.ci.width(), \
+            "PI must be at least as wide as the CI even when tau^2 ~ 0"
+
+    def test_prediction_interval_two_studies_finite(self):
+        """Regression (F3): with k=2 the t degrees of freedom (k-2) is 0, which
+        makes stats.t.ppf return NaN. The df must be floored so the PI is finite."""
+        effects = np.array([0.2, 0.5])
+        variances = np.array([0.01, 0.02])
+
+        result = AdvancedMetaAnalysis.random_effects_analysis(
+            effects, variances, prediction=True
+        )
+
+        pred_int = result.prediction_interval
+        assert pred_int is not None, "Prediction interval should be computed"
+        assert np.isfinite(pred_int.lower) and np.isfinite(pred_int.upper), \
+            "k=2 prediction interval must be finite, not NaN"
+        assert pred_int.width() >= result.ci.width(), \
+            "PI must be at least as wide as the CI for k=2"
+
 
 class TestMetaRegression:
     """Tests for meta-regression."""

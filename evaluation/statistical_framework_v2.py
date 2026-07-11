@@ -164,7 +164,7 @@ class AdvancedMetaAnalysis:
         pred_interval = None
         if prediction:
             pred_interval = AdvancedMetaAnalysis._prediction_interval(
-                pooled_effect, tau2, heterogeneity, n, alpha
+                pooled_effect, tau2, heterogeneity, n, se_naive, alpha
             )
 
         # Z-test
@@ -467,30 +467,37 @@ class AdvancedMetaAnalysis:
         tau2: float,
         heterogeneity: HeterogeneityStatistics,
         n_studies: int,
+        se_pooled: float,
         alpha: float = 0.05
     ) -> UncertaintyInterval:
         """
-        Prediction interval for a new study.
+        Prediction interval for a new study (Higgins, Thompson & Spiegelhalter 2009).
 
-        Implements the Partlett and Riley (2017) method with Knapp-Hartung adjustment.
-
-        Reference: Partlett and Riley (2017). "Approximations to the distribution of
-        the predicted random effects meta-analysis estimate."
+        The prediction-interval standard error is sqrt(tau^2 + SE_mu^2), where
+        SE_mu^2 is the sampling variance of the pooled mean (= 1/sum(w_re), passed
+        in as ``se_pooled``). Both components are required: omitting the SE_mu^2
+        term causes the interval to collapse far below the confidence interval when
+        tau^2 is near zero, violating the invariant PI-width >= CI-width. See
+        Higgins/Borenstein; IntHout et al. (2016).
 
         :param pooled_effect: Pooled effect estimate
         :param tau2: Between-study variance
         :param heterogeneity: Heterogeneity statistics
         :param n_studies: Number of studies
+        :param se_pooled: Standard error of the pooled mean (se_naive = sqrt(1/sum w_re))
         :param alpha: Significance level
         :return: Prediction interval
         """
-        # Standard error for prediction (accounts for uncertainty in τ²)
-        # Using t-distribution for small samples (k < 20)
-        se_pred = np.sqrt(tau2 + heterogeneity.tau_squared_ci.width() / 4)
+        # Standard error for prediction: between-study variance (tau^2) plus the
+        # sampling variance of the pooled mean (SE_mu^2). The dominant SE_mu^2 term
+        # must be included so PI-width >= CI-width holds for all tau^2 (F1).
+        se_pred = np.sqrt(tau2 + se_pooled ** 2)
 
-        # Critical value: use t-distribution for k < 10, normal for k >= 10
+        # Critical value: use t-distribution for k < 10, normal for k >= 10.
+        # Floor df at 1 so k=2 (df = k-2 = 0 -> NaN) yields a finite interval (F3);
+        # this keeps the t_{k-2} convention (IntHout et al. 2016) for k >= 3.
         if n_studies < 10:
-            t_crit = stats.t.ppf(1 - alpha/2, df=n_studies - 2)
+            t_crit = stats.t.ppf(1 - alpha/2, df=max(1, n_studies - 2))
         else:
             t_crit = stats.norm.ppf(1 - alpha/2)
 
