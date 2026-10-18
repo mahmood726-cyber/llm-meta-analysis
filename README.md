@@ -2,6 +2,10 @@
 
 Automating meta-analysis of clinical trials (randomized controlled trials) using Large Language Models.
 
+JSON input helpers require UTF-8, unique object keys and finite numeric values.
+Both JSON save helpers write a complete temporary file before replacing the
+destination; serialization or write failures preserve an existing result file.
+
 ## :sparkles: What's New in v2.0 (Major Statistical Revision)
 
 This version addresses all editorial feedback from *Research Synthesis Methods*.
