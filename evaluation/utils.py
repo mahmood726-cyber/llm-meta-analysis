@@ -5,6 +5,9 @@ except ImportError:  # pragma: no cover - supports flat-module test imports
 from typing import Dict, List, Optional, Any, Tuple
 import os
 import json
+import math
+from pathlib import Path
+import tempfile
 import csv
 import re
 from statistics import mode
@@ -25,6 +28,22 @@ def format_example_with_prompt_template(example: Dict, prompt_template: Template
     return example
 
 
+def _unique_json_object(pairs):
+    result = {}
+    for key, value in pairs:
+        if key in result:
+            raise ValueError(f"Duplicate JSON key: {key!r}")
+        result[key] = value
+    return result
+
+
+def _finite_json_float(value):
+    number = float(value)
+    if not math.isfinite(number):
+        raise ValueError("JSON numbers must be finite")
+    return number
+
+
 def load_json_file(file_path: str) -> List[Dict]:
     """
     This method loads a json file from the given file path
@@ -33,8 +52,10 @@ def load_json_file(file_path: str) -> List[Dict]:
 
     :return objects as a list of dictionaries
     """
-    with open(file_path, "r") as file:
-        json_file = json.load(file)
+    with open(file_path, "r", encoding="utf-8") as file:
+        json_file = json.load(file, object_pairs_hook=_unique_json_object,
+                              parse_float=_finite_json_float,
+                              parse_constant=_finite_json_float)
     return json_file
 
 
@@ -45,8 +66,18 @@ def save_json_file(file_path: str, data: Dict) -> None:
     :param file_path: name of the file to save
     :param data: data to save
     """
-    with open(file_path, "w", encoding='utf-8') as file:
-        json.dump(data, file, indent=4)
+    destination = Path(file_path)
+    staged = None
+    try:
+        with tempfile.NamedTemporaryFile(mode="w", encoding="utf-8", newline="\n",
+                dir=destination.parent, prefix=f".{destination.name}.", suffix=".tmp",
+                delete=False) as file:
+            staged = Path(file.name)
+            json.dump(data, file, indent=4, allow_nan=False, ensure_ascii=False)
+        os.replace(staged, destination)
+    finally:
+        if staged is not None:
+            staged.unlink(missing_ok=True)
 
 
 def save_dataset_to_json(dataset: List[Dict], file_path: str, columns_to_drop: Optional[List[str]] = None) -> None:
@@ -59,8 +90,7 @@ def save_dataset_to_json(dataset: List[Dict], file_path: str, columns_to_drop: O
     """
     if columns_to_drop is not None:
         dataset = [{k: v for k, v in d.items() if k not in columns_to_drop} for d in dataset]
-    with open(file_path, "w", encoding='utf-8') as file:
-        json.dump(dataset, file, indent=4)
+    save_json_file(file_path, dataset)
 
 
 def save_dataset_to_csv(dataset: List[Dict], file_path: str, columns_to_drop: Optional[List[str]] = None) -> None:
