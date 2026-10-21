@@ -4,7 +4,6 @@ Automating meta-analysis of clinical trials (randomized controlled trials) using
 
 ## :sparkles: What's New in v2.0 (Major Statistical Revision)
 
-This version addresses all editorial feedback from *Research Synthesis Methods*.
 All critical methodological concerns have been resolved.
 
 ### Statistical Methods Improvements
@@ -280,7 +279,7 @@ See `CHANGELOG.md` for complete migration guide. Key changes:
 
 ## :information_source: Acknowledgments
 
-This revision addresses feedback from the editorial board of *Research Synthesis Methods*, particularly regarding:
+This revision addresses:
 - Implementation of HKSJ adjustment
 - Q-profile confidence intervals
 - Knapp-Hartung for meta-regression
