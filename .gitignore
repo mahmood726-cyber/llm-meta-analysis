@@ -5,3 +5,10 @@ __pycache__
 *$py.class
 .ipynb_checkpoints
 .Rhistory
+
+# Local session and verification output
+PROGRESS.md
+STUCK_FAILURES.md
+STUCK_FAILURES.jsonl
+sentinel-findings.md
+sentinel-findings.jsonl
