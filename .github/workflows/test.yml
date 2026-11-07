@@ -56,8 +56,7 @@ jobs:
 
       - name: Run tests
         run: |
-          cd evaluation
-          pytest tests/ --cov=. --cov-report=xml --cov-report=html
+          pytest tests/ evaluation/tests/ --cov=evaluation --cov-report=xml:evaluation/coverage.xml --cov-report=html:evaluation/htmlcov
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v3
