@@ -1,3 +1,21 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "llm-meta-analysis"
+version = "2.0"
+dynamic = ["dependencies"]
+
+[tool.setuptools]
+packages = ["evaluation", "evaluation.models", "evaluation.monitoring"]
+
+[tool.setuptools.dynamic]
+dependencies = {file = ["evaluation/requirements.txt"]}
+
+[tool.setuptools.package-data]
+evaluation = ["templates/*/*/*.yaml"]
+
 [tool.pytest.ini_options]
 minversion = "7.0"
 addopts = "-ra -q --strict-markers --tb=short"
